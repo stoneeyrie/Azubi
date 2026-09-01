@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praktikumsplaner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1E2A38;
+    --ink-soft:#293849;
+    --ink-line:#3B4C60;
+    --paper:#F5F3ED;
+    --paper-raised:#FFFFFF;
+    --paper-dark:#EAE6D9;
+    --line:#DBD5C4;
+    --text:#28261F;
+    --text-soft:#6E6A5C;
+    --text-onink:#EDEAE0;
+    --text-onink-soft:#A7B2BF;
+
+    --c-praktikum:#3E6B8A;
+    --c-seminar:#B8842E;
+    --c-berufsschule:#6B4C7A;
+    --c-urlaub:#5E8259;
+    --c-krankheit:#A6503F;
+    --c-sonstiges:#847F70;
+
+    --scrollbar-track:var(--paper-dark);
+    --scrollbar-thumb:#C9C2AC;
+    --scrollbar-thumb-hover:#B3AB90;
+    --scrollbar-track-ink:var(--ink-soft);
+    --scrollbar-thumb-ink:#54677D;
+    --scrollbar-thumb-ink-hover:#6C8199;
+
+    --progress-fill:var(--ink);
+    --today-accent:#1E2A38;
+    --hatch-color:rgba(0,0,0,0.10);
+
+    color-scheme:light;
+  }
+
+  :root[data-theme="dark"]{
+    --ink:#161B22;
+    --ink-soft:#1E252E;
+    --ink-line:#323B47;
+    --paper:#14171C;
+    --paper-raised:#1C2028;
+    --paper-dark:#242A33;
+    --line:#333B47;
+    --text:#E7E4DA;
+    --text-soft:#9199A6;
+    --text-onink:#EDEAE0;
+    --text-onink-soft:#8B94A3;
+
+    --c-praktikum:#5A8CB0;
+    --c-seminar:#D3A354;
+    --c-berufsschule:#9271A3;
+    --c-urlaub:#7FA476;
+    --c-krankheit:#C4735F;
+    --c-sonstiges:#9C9787;
+
+    --scrollbar-track:var(--paper-dark);
+    --scrollbar-thumb:#454E5C;
+    --scrollbar-thumb-hover:#586373;
+    --scrollbar-track-ink:var(--ink-soft);
+    --scrollbar-thumb-ink:#3D4856;
+    --scrollbar-thumb-ink-hover:#4E5B6C;
+
+    --progress-fill:#E3B25C;
+    --today-accent:#5FD0C7;
+    --hatch-color:rgba(255,255,255,0.12);
+
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  html{
+    scrollbar-width:thin;
+    scrollbar-color:var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+  ::-webkit-scrollbar{width:11px; height:11px;}
+  ::-webkit-scrollbar-track{background:var(--scrollbar-track);}
+  ::-webkit-scrollbar-thumb{
+    background:var(--scrollbar-thumb);
+    border-radius:6px;
+    border:2px solid var(--scrollbar-track);
+  }
+  ::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-hover);}
+  ::-webkit-scrollbar-corner{background:var(--scrollbar-track);}
+
+  #sidebar, #azubi-list{
+    scrollbar-color:var(--scrollbar-thumb-ink) var(--scrollbar-track-ink);
+  }
+  #sidebar::-webkit-scrollbar-track, #azubi-list::-webkit-scrollbar-track{background:var(--scrollbar-track-ink);}
+  #sidebar::-webkit-scrollbar-thumb, #azubi-list::-webkit-scrollbar-thumb{
+    background:var(--scrollbar-thumb-ink);
+    border-color:var(--scrollbar-track-ink);
+  }
+  #sidebar::-webkit-scrollbar-thumb:hover, #azubi-list::-webkit-scrollbar-thumb:hover{background:var(--scrollbar-thumb-ink-hover);}
+
+  body{
+    margin:0;
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    color:var(--text);
+    background:var(--paper);
+    display:flex;
+    min-height:100vh;
+    transition:background .15s, color .15s;
+  }
+  h1,h2,h3{font-family:'IBM Plex Serif', Georgia, serif; font-weight:600; margin:0;}
+  button{font-family:inherit;}
+  input,select,textarea{font-family:inherit; font-size:0.95rem;}
+  :focus-visible{outline:2px solid var(--c-praktikum); outline-offset:2px;}
+
+  /* ---------- Sidebar ---------- */
+  #sidebar{
+    width:300px;
+    min-width:300px;
+    background:var(--ink);
+    color:var(--text-onink);
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    position:sticky;
+    top:0;
+  }
+  #sidebar-header{
+    padding:22px 20px 16px;
+    border-bottom:1px solid var(--ink-line);
+  }
+  #sidebar-header-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  #sidebar-header h1{font-size:1.25rem; color:#fff; letter-spacing:0.01em;}
+  #sidebar-header p{margin:4px 0 0; font-size:0.8rem; color:var(--text-onink-soft);}
+
+  #theme-toggle-btn{
+    background:var(--ink-soft);
+    border:1px solid var(--ink-line);
+    color:var(--text-onink);
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.95rem;
+    flex-shrink:0;
+    line-height:1;
+  }
+  #theme-toggle-btn:hover{background:var(--ink-line);}
+
+  #add-azubi-btn{
+    margin:16px 20px 8px;
+    background:transparent;
+    border:1px solid var(--ink-line);
+    color:var(--text-onink);
+    padding:9px 12px;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:0.85rem;
+    text-align:left;
+    transition:background .15s, border-color .15s;
+  }
+  #add-azubi-btn:hover{background:var(--ink-soft); border-color:#54677D;}
+
+  #add-azubi-form{
+    margin:0 20px 12px;
+    display:none;
+    flex-direction:column;
+    gap:8px;
+    background:var(--ink-soft);
+    border:1px solid var(--ink-line);
+    border-radius:4px;
+    padding:12px;
+  }
+  #add-azubi-form.open{display:flex;}
+  #add-azubi-form input, #add-azubi-form select{
+    background:var(--ink);
+    border:1px solid var(--ink-line);
+    color:var(--text-onink);
+    border-radius:3px;
+    padding:7px 8px;
+  }
+  #add-azubi-form input::placeholder{color:var(--text-onink-soft);}
+  .form-row-btns{display:flex; gap:8px; margin-top:2px;}
+  .btn-primary{
+    background:var(--c-praktikum);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:7px 12px;
+    cursor:pointer;
+    font-size:0.85rem;
+    font-weight:500;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--ink-line);
+    color:var(--text-onink-soft);
+    border-radius:3px;
+    padding:7px 12px;
+    cursor:pointer;
+    font-size:0.85rem;
+  }
+  .btn-ghost:hover{color:var(--text-onink);}
+
+  #azubi-list{
+    list-style:none;
+    margin:4px 0 0;
+    padding:0 10px 16px;
+    overflow-y:auto;
+    flex:1;
+  }
+  #azubi-list li{
+    position:relative;
+    padding:11px 12px 11px 16px;
+    margin-bottom:4px;
+    border-radius:4px;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  #azubi-list li::before{
+    content:"";
+    position:absolute;
+    left:0; top:8px; bottom:8px;
+    width:4px;
+    border-radius:2px;
+    background:var(--status-color, #54677D);
+  }
+  #azubi-list li:hover{background:var(--ink-soft);}
+  #azubi-list li.active{background:var(--ink-soft); border-color:var(--ink-line);}
+  .azubi-name{font-size:0.95rem; font-weight:500; color:#fff;}
+  .azubi-status{font-size:0.78rem; color:var(--text-onink-soft); margin-top:2px;}
+  #azubi-list #empty-list-hint{padding:16px 4px; font-size:0.83rem; color:var(--text-onink-soft); line-height:1.5; cursor:default;}
+  #azubi-list #empty-list-hint:hover{background:none;}
+
+  #archive-section{border-top:1px solid var(--ink-line); padding:6px 10px 4px;}
+  #archive-toggle{
+    width:100%;
+    background:none;
+    border:none;
+    color:var(--text-onink-soft);
+    font-size:0.8rem;
+    padding:10px 6px;
+    text-align:left;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  #archive-toggle:hover{color:var(--text-onink);}
+  #archive-toggle .chev{transition:transform .15s;}
+  #archive-toggle[aria-expanded="true"] .chev{transform:rotate(90deg);}
+  #archive-list{list-style:none; margin:0; padding:0 10px 8px;}
+  #azubi-list li.archived-item, #archive-list li{opacity:0.75;}
+  #archive-list li{
+    padding:11px 12px 11px 16px;
+    margin-bottom:4px;
+    border-radius:4px;
+    cursor:pointer;
+    position:relative;
+  }
+  #archive-list li::before{
+    content:"";
+    position:absolute;
+    left:0; top:8px; bottom:8px;
+    width:4px;
+    border-radius:2px;
+    background:var(--status-color, #847F70);
+  }
+  #archive-list li:hover, #archive-list li.active{background:var(--ink-soft);}
+
+  #io-actions{
+    padding:14px 20px 18px;
+    border-top:1px solid var(--ink-line);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  #io-actions .btn-ghost{
+    color:var(--text-onink-soft);
+    border-color:var(--ink-line);
+    width:100%;
+    text-align:center;
+  }
+  #io-actions .btn-ghost:hover{color:var(--text-onink); background:var(--ink-soft);}
+
+  /* ---------- Main ---------- */
+  #main{
+    flex:1;
+    padding:32px 40px 60px;
+    max-width:900px;
+  }
+  #empty-state{
+    color:var(--text-soft);
+    max-width:420px;
+    margin-top:60px;
+    line-height:1.6;
+  }
+  #empty-state h2{color:var(--text); font-size:1.4rem; margin-bottom:10px;}
+
+  #detail-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:26px;
+    gap:16px;
+  }
+  #detail-name{font-size:1.7rem;}
+  #detail-role{color:var(--text-soft); font-size:0.9rem; margin-top:4px;}
+  #detail-status-line{
+    margin-top:10px;
+    font-size:0.88rem;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:5px 11px;
+    border-radius:20px;
+    background:var(--paper-dark);
+  }
+  #detail-status-line .dot{width:8px; height:8px; border-radius:50%; background:var(--status-color,#847F70);}
+  #detail-year-row{
+    margin-top:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:0.83rem;
+    color:var(--text-soft);
+  }
+  #detail-year-select{
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:4px 7px;
+    background:var(--paper-raised);
+    color:var(--text);
+    font-size:0.83rem;
+  }
+  #detail-meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px 24px;
+    margin-top:12px;
+  }
+  .meta-field{display:flex; flex-direction:column; gap:4px;}
+  .meta-field label{font-size:0.76rem; color:var(--text-soft);}
+  .meta-field input{
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:6px 9px;
+    font-size:0.85rem;
+    background:var(--paper-raised);
+    color:var(--text);
+    min-width:190px;
+  }
+  .meta-link-row{display:flex; gap:6px; align-items:center;}
+  .meta-link-row input{flex:1;}
+  #detail-profile-open{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:30px;
+    height:30px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    color:var(--text-soft);
+    text-decoration:none;
+    font-size:0.95rem;
+    flex-shrink:0;
+  }
+  #detail-profile-open:hover{border-color:var(--c-praktikum); color:var(--c-praktikum);}
+  #detail-profile-open.disabled{pointer-events:none; opacity:0.35;}
+  #archived-badge{
+    display:none;
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    color:var(--text-soft);
+    background:var(--paper-dark);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:2px 7px;
+    margin-left:10px;
+    vertical-align:middle;
+  }
+  #detail-header-actions{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:flex-end;
+  }
+  #archive-toggle-azubi-btn{white-space:nowrap;}
+  #delete-azubi-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-soft);
+    border-radius:4px;
+    padding:7px 12px;
+    font-size:0.8rem;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  #delete-azubi-btn:hover{border-color:var(--c-krankheit); color:var(--c-krankheit);}
+
+  #presence-banner{
+    display:none;
+    background:var(--paper-dark);
+    border-left:4px solid var(--banner-color, var(--c-praktikum));
+    border-radius:4px;
+    padding:13px 16px;
+    margin-bottom:22px;
+    font-size:0.9rem;
+    line-height:1.5;
+  }
+  #presence-banner strong{font-family:'IBM Plex Serif', serif; font-weight:600;}
+
+  section.panel{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:22px 24px;
+    margin-bottom:22px;
+  }
+  section.panel > h3{font-size:1.05rem; margin-bottom:16px;}
+
+  .panel-header-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .panel-header-row h3{margin-bottom:0;}
+  .btn-ghost.small{
+    padding:5px 10px;
+    font-size:0.76rem;
+    white-space:nowrap;
+  }
+  #checklist-collapsed-msg{
+    display:none;
+    font-size:0.87rem;
+    color:var(--text-soft);
+  }
+  #checklist-body.hidden{display:none;}
+
+  /* Calendar */
+  #cal-nav{display:flex; align-items:center; gap:14px; margin-bottom:4px;}
+  #cal-nav button{
+    background:var(--paper-dark);
+    border:1px solid var(--line);
+    border-radius:4px;
+    width:30px; height:30px;
+    cursor:pointer;
+    font-size:0.9rem;
+  }
+  #cal-nav button:hover{background:var(--line);}
+  #cal-month-label{font-family:'IBM Plex Serif',serif; font-weight:600; font-size:1.05rem; min-width:150px;}
+  #cal-today-btn{
+    margin-left:auto;
+    background:none;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:5px 10px;
+    font-size:0.78rem;
+    cursor:pointer;
+    color:var(--text-soft);
+  }
+  #cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:4px;
+    margin-top:14px;
+  }
+  .cal-weekday{
+    font-size:0.72rem;
+    color:var(--text-soft);
+    text-align:center;
+    padding-bottom:4px;
+    font-weight:500;
+  }
+  .cal-day{
+    aspect-ratio:1/0.85;
+    border-radius:4px;
+    border:1px solid var(--line);
+    padding:5px 6px;
+    font-size:0.78rem;
+    position:relative;
+    background:var(--paper);
+  }
+  .cal-day.blank{border-color:transparent; background:transparent;}
+  .cal-day.today{
+    outline:3px solid var(--today-accent);
+    outline-offset:-3px;
+    position:relative;
+    z-index:1;
+  }
+  .cal-day.today .num{font-weight:700;}
+  .cal-day.past::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:3px;
+    background:repeating-linear-gradient(
+      45deg,
+      var(--hatch-color) 0,
+      var(--hatch-color) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+    pointer-events:none;
+  }
+  .cal-day .num{font-weight:500;}
+  .cal-day.has-period{color:#fff;}
+  .cal-day .type-label{
+    display:block;
+    font-size:0.62rem;
+    margin-top:3px;
+    line-height:1.15;
+    opacity:0.95;
+  }
+  #cal-legend{display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; font-size:0.78rem; color:var(--text-soft);}
+  #cal-legend span{display:inline-flex; align-items:center; gap:5px;}
+  #cal-legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+
+  /* Composition bar */
+  #comp-bar{
+    display:flex;
+    width:100%;
+    height:22px;
+    border-radius:4px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  #comp-bar .seg{height:100%;}
+  #comp-legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 22px;
+    margin-top:16px;
+  }
+  #comp-legend .comp-row{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:0.85rem;
+    min-width:170px;
+  }
+  #comp-legend i{width:10px; height:10px; border-radius:2px; display:inline-block; flex-shrink:0;}
+  #comp-legend .comp-pct{font-weight:600; margin-left:auto;}
+  #comp-legend .comp-days{color:var(--text-soft); font-size:0.78rem;}
+  #comp-total{font-size:0.8rem; color:var(--text-soft); margin-top:14px;}
+  #comp-empty{color:var(--text-soft); font-size:0.87rem;}
+
+  /* Progress bar */
+  #progress-bar{
+    display:flex;
+    width:100%;
+    height:22px;
+    border-radius:4px;
+    overflow:hidden;
+    border:1px solid var(--line);
+    background:var(--paper-dark);
+  }
+  #progress-bar .seg-elapsed{height:100%; background:var(--progress-fill);}
+  #progress-summary{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px 24px;
+    margin-top:14px;
+    font-size:0.85rem;
+  }
+  #progress-summary .stat-label{color:var(--text-soft); font-size:0.76rem; display:block; margin-bottom:2px;}
+  #progress-summary .stat-value{font-weight:600; font-size:1.05rem; font-family:'IBM Plex Serif', serif;}
+  #progress-range{font-size:0.78rem; color:var(--text-soft); margin-top:10px;}
+  #progress-empty{color:var(--text-soft); font-size:0.87rem;}
+
+  /* Period form + list */
+  #period-form{display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line);}
+  #period-form .field{display:flex; flex-direction:column; gap:4px;}
+  #period-form label{font-size:0.75rem; color:var(--text-soft);}
+  #period-form input, #period-form select{
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:7px 8px;
+    min-width:130px;
+  }
+  #period-form input[name="note"]{min-width:180px;}
+  #period-form-cancel{display:none;}
+
+  .period-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+    font-size:0.87rem;
+  }
+  .period-item:last-child{border-bottom:none;}
+  .period-swatch{width:10px; height:10px; border-radius:2px; flex-shrink:0;}
+  .period-type{font-weight:500; min-width:100px;}
+  .period-range{color:var(--text-soft); min-width:150px;}
+  .period-note{color:var(--text-soft); flex:1; font-style:italic;}
+  .period-actions{display:flex; gap:6px;}
+  .period-actions button{
+    background:none; border:none; cursor:pointer; color:var(--text-soft); font-size:0.78rem;
+    text-decoration:underline;
+  }
+  .period-actions button:hover{color:var(--text);}
+  #no-periods{color:var(--text-soft); font-size:0.87rem;}
+
+  /* Checklist */
+  #checklist-items{list-style:none; margin:0 0 14px; padding:0;}
+  #checklist-items li{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 0;
+  }
+  #checklist-items li label{flex:1; font-size:0.9rem; cursor:pointer;}
+  #checklist-items input[type=checkbox]{width:17px; height:17px; cursor:pointer; accent-color:var(--c-praktikum);}
+  #checklist-items .remove-item{
+    background:none; border:none; color:var(--text-soft); cursor:pointer; font-size:0.75rem; text-decoration:underline;
+  }
+  #checklist-items li.checked label{color:var(--text-soft); text-decoration:line-through;}
+
+  #add-checklist-item{display:flex; gap:8px; margin-bottom:20px;}
+  #add-checklist-item input{
+    flex:1; border:1px solid var(--line); border-radius:4px; padding:7px 9px;
+  }
+  #freetext-wrap label{font-size:0.8rem; color:var(--text-soft); display:block; margin-bottom:6px;}
+  #freetext{
+    width:100%;
+    min-height:90px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:10px;
+    resize:vertical;
+  }
+  #save-indicator{font-size:0.75rem; color:var(--c-urlaub); opacity:0; transition:opacity .3s; margin-top:6px;}
+  #save-indicator.show{opacity:1;}
+
+  /* Activity log */
+  #activity-form{display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line);}
+  #activity-form .field{display:flex; flex-direction:column; gap:4px;}
+  #activity-form label{font-size:0.75rem; color:var(--text-soft);}
+  #activity-form input{
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:7px 8px;
+  }
+  #activity-date{min-width:150px;}
+  #activity-title{min-width:220px; flex:1;}
+  #activity-form-cancel{display:none;}
+
+  #activity-list{display:flex; flex-direction:column; gap:10px;}
+  .activity-item{
+    display:flex;
+    gap:14px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .activity-item:last-child{border-bottom:none;}
+  .activity-date{
+    min-width:78px;
+    font-size:0.8rem;
+    color:var(--text-soft);
+    padding-top:1px;
+  }
+  .activity-body{flex:1;}
+  .activity-title{font-weight:500; font-size:0.92rem;}
+  .activity-note{font-size:0.85rem; color:var(--text-soft); margin-top:2px; white-space:pre-wrap;}
+  .activity-actions{display:flex; gap:6px; margin-top:4px;}
+  .activity-actions button{
+    background:none; border:none; cursor:pointer; color:var(--text-soft); font-size:0.76rem;
+    text-decoration:underline; padding:0;
+  }
+  .activity-actions button:hover{color:var(--text);}
+  #no-activities{color:var(--text-soft); font-size:0.87rem;}
+
+  /* Feedback criteria */
+  #feedback-year-tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:18px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+  }
+  .feedback-tab{
+    background:var(--paper-dark);
+    border:1px solid var(--line);
+    color:var(--text-soft);
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:0.83rem;
+    cursor:pointer;
+  }
+  .feedback-tab:hover{color:var(--text);}
+  .feedback-tab.active{
+    background:var(--c-praktikum);
+    border-color:var(--c-praktikum);
+    color:#fff;
+    font-weight:500;
+  }
+  .feedback-tab.is-current-year::after{content:" •"; opacity:0.8;}
+
+  #feedback-criteria-list{list-style:none; margin:0 0 16px; padding:0;}
+  .feedback-criterion{
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .feedback-criterion:last-child{border-bottom:none;}
+  .feedback-criterion-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .feedback-criterion-label{font-size:0.92rem; font-weight:500;}
+  .feedback-rating{
+    display:flex;
+    gap:4px;
+    flex-shrink:0;
+  }
+  .feedback-rating button{
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--text-soft);
+    font-size:0.78rem;
+    cursor:pointer;
+    padding:0;
+  }
+  .feedback-rating button:hover{border-color:var(--c-praktikum);}
+  .feedback-rating button.selected{
+    background:var(--c-praktikum);
+    border-color:var(--c-praktikum);
+    color:#fff;
+    font-weight:600;
+  }
+  .feedback-criterion-note{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:7px 9px;
+    font-size:0.87rem;
+    resize:vertical;
+    min-height:38px;
+  }
+  .feedback-remove-btn{
+    background:none; border:none; color:var(--text-soft); cursor:pointer; font-size:0.74rem;
+    text-decoration:underline; margin-top:6px; padding:0;
+  }
+  .feedback-remove-btn:hover{color:var(--text);}
+  #no-feedback-criteria{color:var(--text-soft); font-size:0.87rem;}
+  #add-feedback-criterion{display:flex; gap:8px;}
+  #add-feedback-criterion input{
+    flex:1; border:1px solid var(--line); border-radius:4px; padding:7px 9px;
+  }
+
+  @media (max-width:760px){
+    body{flex-direction:column;}
+    #sidebar{width:100%; height:auto; position:relative; min-width:0;}
+    #main{padding:24px 18px 50px;}
+  }
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div id="sidebar-header">
+    <div id="sidebar-header-row">
+      <h1>Praktikumsplaner</h1>
+      <button type="button" id="theme-toggle-btn" aria-label="Farbschema wechseln" title="Farbschema wechseln">
+        <span id="theme-toggle-icon">🌙</span>
+      </button>
+    </div>
+    <p>Azubi-Praktika im Überblick</p>
+  </div>
+
+  <button id="add-azubi-btn" type="button">+ Neuer Azubi</button>
+  <form id="add-azubi-form">
+    <input type="text" id="new-azubi-name" placeholder="Name" required>
+    <input type="text" id="new-azubi-role" placeholder="Beruf (optional)">
+    <select id="new-azubi-year" aria-label="Ausbildungsjahr">
+      <option value="1">1. Ausbildungsjahr</option>
+      <option value="2">2. Ausbildungsjahr</option>
+      <option value="3">3. Ausbildungsjahr</option>
+    </select>
+    <input type="text" id="new-azubi-trainer" placeholder="Ausbilder/in (optional)">
+    <input type="url" id="new-azubi-profile" placeholder="Profil-Link (optional)">
+    <div class="form-row-btns">
+      <button type="submit" class="btn-primary">Anlegen</button>
+      <button type="button" class="btn-ghost" id="cancel-add-azubi">Abbrechen</button>
+    </div>
+  </form>
+
+  <ul id="azubi-list"></ul>
+
+  <div id="archive-section">
+    <button type="button" id="archive-toggle" aria-expanded="false">
+      <span>Archiv (<span id="archive-count">0</span>)</span>
+      <span class="chev">›</span>
+    </button>
+    <ul id="archive-list"></ul>
+  </div>
+
+  <div id="io-actions">
+    <button type="button" class="btn-ghost" id="export-btn">Daten exportieren</button>
+    <button type="button" class="btn-ghost" id="import-btn">Daten importieren</button>
+    <input type="file" id="import-file-input" accept="application/json" style="display:none;">
+  </div>
+</aside>
+
+<main id="main">
+  <div id="empty-state">
+    <h2>Noch kein Azubi ausgewählt</h2>
+    <p>Lege links einen Azubi an oder wähle einen aus der Liste aus. Für jeden Azubi kannst du Praktikums-, Seminar- und Berufsschulzeiten im Kalender pflegen und die Checkliste für den ersten Tag abhaken.</p>
+  </div>
+
+  <div id="detail" style="display:none;">
+    <div id="detail-header">
+      <div>
+        <div style="display:flex; align-items:center; flex-wrap:wrap;">
+          <h2 id="detail-name"></h2>
+          <span id="archived-badge">Archiviert</span>
+        </div>
+        <div id="detail-role"></div>
+        <div id="detail-status-line"><span class="dot"></span><span id="detail-status-text"></span></div>
+        <div id="detail-year-row">
+          <label for="detail-year-select">Ausbildungsjahr</label>
+          <select id="detail-year-select">
+            <option value="1">1. Jahr</option>
+            <option value="2">2. Jahr</option>
+            <option value="3">3. Jahr</option>
+          </select>
+        </div>
+        <div id="detail-meta-row">
+          <div class="meta-field">
+            <label for="detail-trainer-input">Ausbilder/in</label>
+            <input type="text" id="detail-trainer-input" placeholder="Name eintragen">
+          </div>
+          <div class="meta-field">
+            <label for="detail-profile-input">Profil-Link</label>
+            <div class="meta-link-row">
+              <input type="url" id="detail-profile-input" placeholder="https://…">
+              <a id="detail-profile-open" href="#" target="_blank" rel="noopener noreferrer" title="Profil öffnen" aria-label="Profil öffnen">↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="detail-header-actions">
+        <button id="archive-toggle-azubi-btn" type="button" class="btn-ghost">Praktikum abschließen &amp; archivieren</button>
+        <button id="delete-azubi-btn" type="button">Azubi löschen</button>
+      </div>
+    </div>
+
+    <div id="presence-banner"></div>
+
+    <section class="panel">
+      <h3>Kalender</h3>
+      <div id="cal-nav">
+        <button id="cal-prev" type="button" aria-label="Vorheriger Monat">‹</button>
+        <div id="cal-month-label"></div>
+        <button id="cal-next" type="button" aria-label="Nächster Monat">›</button>
+        <button id="cal-today-btn" type="button">Heute</button>
+      </div>
+      <div id="cal-grid"></div>
+      <div id="cal-legend"></div>
+    </section>
+
+    <section class="panel">
+      <h3>Zeitliche Zusammensetzung</h3>
+      <div id="comp-body">
+        <div id="comp-bar"></div>
+        <div id="comp-legend"></div>
+        <div id="comp-total"></div>
+      </div>
+      <p style="font-size:0.76rem; color:var(--text-soft); margin:12px 0 0;">Wochenenden werden bei der Berechnung nicht mitgezählt.</p>
+    </section>
+
+    <section class="panel">
+      <h3>Fortschritt</h3>
+      <div id="progress-body">
+        <div id="progress-bar"><div class="seg-elapsed"></div></div>
+        <div id="progress-summary">
+          <div>
+            <span class="stat-label">Verstrichen</span>
+            <span class="stat-value" id="progress-elapsed-value"></span>
+          </div>
+          <div>
+            <span class="stat-label">Verbleibend</span>
+            <span class="stat-value" id="progress-remaining-value"></span>
+          </div>
+        </div>
+        <div id="progress-range"></div>
+      </div>
+      <p style="font-size:0.76rem; color:var(--text-soft); margin:12px 0 0;">Wochenenden, Seminare, Berufsschule, Urlaub, Krankheit und Sonstiges zählen nicht als Praktikumszeit bei uns – nur reine Praktikumstage.</p>
+    </section>
+
+    <section class="panel">
+      <h3>Zeitabschnitte</h3>
+      <p style="font-size:0.82rem; color:var(--text-soft); margin:-6px 0 16px; max-width:60ch;">Trage <strong>Praktikum</strong> als einen durchgehenden Zeitraum ein. Seminare, Berufsschule, Urlaub, Krankheit und Sonstiges kannst du einfach innerhalb dieses Zeitraums eintragen – sie werden automatisch vom Praktikum abgezogen, ohne dass du den Praktikums-Eintrag dafür unterbrechen musst.</p>
+      <form id="period-form">
+        <div class="field">
+          <label for="period-type">Art</label>
+          <select id="period-type" name="type" required></select>
+        </div>
+        <div class="field">
+          <label for="period-start">Von</label>
+          <input type="date" id="period-start" name="start" required>
+        </div>
+        <div class="field">
+          <label for="period-end">Bis</label>
+          <input type="date" id="period-end" name="end" required>
+        </div>
+        <div class="field">
+          <label for="period-note">Notiz (optional)</label>
+          <input type="text" id="period-note" name="note" placeholder="z. B. Abteilung, Ort …">
+        </div>
+        <button type="submit" class="btn-primary" id="period-submit-btn">Hinzufügen</button>
+        <button type="button" class="btn-ghost" id="period-form-cancel">Abbrechen</button>
+      </form>
+      <div id="period-list"></div>
+    </section>
+
+    <section class="panel">
+      <h3>Bearbeitete Themen &amp; Tätigkeiten</h3>
+      <form id="activity-form">
+        <div class="field">
+          <label for="activity-date">Datum</label>
+          <input type="date" id="activity-date" name="date" required>
+        </div>
+        <div class="field">
+          <label for="activity-title">Thema / Tätigkeit</label>
+          <input type="text" id="activity-title" name="title" placeholder="z. B. Rechnungsprüfung selbstständig durchgeführt" required>
+        </div>
+        <div class="field" style="flex-basis:100%;">
+          <label for="activity-note">Notiz (optional, z. B. für Feedback)</label>
+          <input type="text" id="activity-note" placeholder="Zusätzliche Details, Beobachtungen …" style="width:100%;">
+        </div>
+        <button type="submit" class="btn-primary" id="activity-submit-btn">Hinzufügen</button>
+        <button type="button" class="btn-ghost" id="activity-form-cancel">Abbrechen</button>
+      </form>
+      <div id="activity-list"></div>
+    </section>
+
+    <section class="panel">
+      <h3>Feedback-Kriterien</h3>
+      <p style="font-size:0.82rem; color:var(--text-soft); margin:-6px 0 16px; max-width:60ch;">Die Kriterien richten sich nach dem Ausbildungsjahr. Du kannst hier schon während des Praktikums Bewertungen und Notizen für das spätere Feedbackgespräch festhalten – auch für andere Jahre als das aktuelle.</p>
+      <div id="feedback-year-tabs"></div>
+      <ul id="feedback-criteria-list"></ul>
+      <form id="add-feedback-criterion">
+        <input type="text" id="new-feedback-criterion" placeholder="Neues Kriterium für dieses Jahr hinzufügen …">
+        <button type="submit" class="btn-ghost">Hinzufügen</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header-row">
+        <h3>Checkliste erster Tag</h3>
+        <button type="button" class="btn-ghost small" id="checklist-toggle-btn">Ausblenden</button>
+      </div>
+      <div id="checklist-collapsed-msg">Ausgeblendet, da das Praktikum bereits begonnen hat.</div>
+      <div id="checklist-body">
+        <ul id="checklist-items"></ul>
+        <form id="add-checklist-item">
+          <input type="text" id="new-checklist-item" placeholder="Neuen Punkt hinzufügen …">
+          <button type="submit" class="btn-ghost">Hinzufügen</button>
+        </form>
+        <div id="freetext-wrap">
+          <label for="freetext">Weitere Notizen</label>
+          <textarea id="freetext" placeholder="Freitext, z. B. Besonderheiten, Kontaktpersonen, Zugangsdaten-Hinweise …"></textarea>
+          <div id="save-indicator">Gespeichert ✓</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Theme ----------
+  function applyTheme(theme){
+    if(theme === "dark"){
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.getElementById("theme-toggle-icon").textContent = "☀️";
+      document.getElementById("theme-toggle-btn").setAttribute("title", "Zu hellem Farbschema wechseln");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      document.getElementById("theme-toggle-icon").textContent = "🌙";
+      document.getElementById("theme-toggle-btn").setAttribute("title", "Zu dunklem Farbschema wechseln");
+    }
+  }
+  // Sofort beim Laden anwenden (Systemeinstellung als Vorabwert), bevor die Datenbank bereit ist –
+  // vermeidet ein kurzes Aufblitzen im falschen Farbschema.
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(prefersDark ? "dark" : "light");
+  document.getElementById("theme-toggle-btn").addEventListener("click", async () => {
+    const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    const next = current === "dark" ? "light" : "dark";
+    applyTheme(next);
+    if(db) await put("settings", {key: "theme", value: next});
+  });
+
+  const TYPES = {
+    praktikum:    { label:"Praktikum",     color:"var(--c-praktikum)"    },
+    seminar:      { label:"Seminar",       color:"var(--c-seminar)"      },
+    berufsschule: { label:"Berufsschule",  color:"var(--c-berufsschule)" },
+    urlaub:       { label:"Urlaub",        color:"var(--c-urlaub)"       },
+    krankheit:    { label:"Krankheit",     color:"var(--c-krankheit)"    },
+    sonstiges:    { label:"Sonstiges",     color:"var(--c-sonstiges)"    }
+  };
+
+  const DEFAULT_CHECKLIST = [
+    "Zugangsausweis / Schlüssel",
+    "IT-Benutzerkonto beantragt",
+    "E-Mail-Adresse eingerichtet",
+    "Systemberechtigungen erteilt",
+    "Sicherheitsunterweisung durchgeführt",
+    "Ansprechpartner / Pate benannt",
+    "Einführungsplan übergeben",
+    "Arbeitsplatz vorbereitet"
+  ];
+
+  // Vorschläge – bitte an eure eigenen Kriterien anpassen (im Feedback-Bereich editierbar)
+  const DEFAULT_FEEDBACK_CRITERIA = {
+    1: [
+      "Zuverlässigkeit / Pünktlichkeit",
+      "Grundlegendes Verständnis der Abläufe",
+      "Lernbereitschaft",
+      "Teamfähigkeit"
+    ],
+    2: [
+      "Selbstständige Bearbeitung von Aufgaben",
+      "Vertieftes fachliches Verständnis",
+      "Kommunikation mit Kolleg:innen / Kund:innen",
+      "Genauigkeit / Sorgfalt"
+    ],
+    3: [
+      "Eigenverantwortliches Arbeiten",
+      "Fachliche Tiefe / Prüfungsvorbereitung",
+      "Übernahme von Teilverantwortung",
+      "Professionelles Auftreten"
+    ]
+  };
+
+  let db;
+  let currentAzubiId = null;
+  let viewDate = new Date();
+  let editingPeriodId = null;
+  let freetextTimer = null;
+  let checklistOverride = null; // null = automatisch (vor Start sichtbar, danach ausgeblendet), true/false = manuell erzwungen
+  let feedbackViewYear = null; // welches Ausbildungsjahr im Feedback-Tab gerade angezeigt wird
+  const feedbackNoteTimers = {};
+
+  // ---------- IndexedDB helpers ----------
+  function openDB(){
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open("azubi_praktikum_db", 4);
+      req.onupgradeneeded = (e) => {
+        const d = e.target.result;
+        if(!d.objectStoreNames.contains("azubis")){
+          d.createObjectStore("azubis", {keyPath:"id", autoIncrement:true});
+        }
+        if(!d.objectStoreNames.contains("periods")){
+          const s = d.createObjectStore("periods", {keyPath:"id", autoIncrement:true});
+          s.createIndex("azubiId", "azubiId", {unique:false});
+        }
+        if(!d.objectStoreNames.contains("checklistItems")){
+          d.createObjectStore("checklistItems", {keyPath:"id", autoIncrement:true});
+        }
+        if(!d.objectStoreNames.contains("checklistStatus")){
+          d.createObjectStore("checklistStatus", {keyPath:"azubiId"});
+        }
+        if(!d.objectStoreNames.contains("activities")){
+          const a = d.createObjectStore("activities", {keyPath:"id", autoIncrement:true});
+          a.createIndex("azubiId", "azubiId", {unique:false});
+        }
+        if(!d.objectStoreNames.contains("settings")){
+          d.createObjectStore("settings", {keyPath:"key"});
+        }
+        if(!d.objectStoreNames.contains("feedbackCriteria")){
+          const fc = d.createObjectStore("feedbackCriteria", {keyPath:"id", autoIncrement:true});
+          fc.createIndex("year", "year", {unique:false});
+        }
+        if(!d.objectStoreNames.contains("feedbackEntries")){
+          const fe = d.createObjectStore("feedbackEntries", {keyPath:"id", autoIncrement:true});
+          fe.createIndex("azubiId", "azubiId", {unique:false});
+        }
+      };
+      req.onsuccess = (e) => resolve(e.target.result);
+      req.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  function tx(storeNames, mode){
+    return db.transaction(storeNames, mode);
+  }
+  function reqToPromise(req){
+    return new Promise((resolve, reject) => {
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function getAll(store){
+    return reqToPromise(tx(store, "readonly").objectStore(store).getAll());
+  }
+  function getAllByIndex(store, index, value){
+    return reqToPromise(tx(store, "readonly").objectStore(store).index(index).getAll(value));
+  }
+  function get(store, key){
+    return reqToPromise(tx(store, "readonly").objectStore(store).get(key));
+  }
+  function put(store, value){
+    return reqToPromise(tx(store, "readwrite").objectStore(store).put(value));
+  }
+  function add(store, value){
+    return reqToPromise(tx(store, "readwrite").objectStore(store).add(value));
+  }
+  function del(store, key){
+    return reqToPromise(tx(store, "readwrite").objectStore(store).delete(key));
+  }
+  function clearStore(store){
+    return reqToPromise(tx(store, "readwrite").objectStore(store).clear());
+  }
+
+  // ---------- Date helpers ----------
+  function isoDate(d){
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+  function formatDE(iso){
+    const [y,m,d] = iso.split("-");
+    return `${d}.${m}.${y}`;
+  }
+  function countWeekdays(startISO, endISO){
+    let count = 0;
+    let d = new Date(startISO + "T00:00:00");
+    const end = new Date(endISO + "T00:00:00");
+    while(d <= end){
+      const day = d.getDay(); // 0 = Sonntag, 6 = Samstag
+      if(day !== 0 && day !== 6) count++;
+      d.setDate(d.getDate() + 1);
+    }
+    return count;
+  }
+  const todayISO = isoDate(new Date());
+  const MONTH_NAMES = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  const WEEKDAYS = ["Mo","Di","Mi","Do","Fr","Sa","So"];
+
+  // ---------- Init ----------
+  openDB().then(async (database) => {
+    db = database;
+    try {
+      const savedTheme = await get("settings", "theme");
+      if(savedTheme && savedTheme.value) applyTheme(savedTheme.value);
+    } catch(err){
+      // Kein gespeicherter Wert vorhanden – Systemeinstellung bleibt aktiv
+    }
+    const items = await getAll("checklistItems");
+    if(items.length === 0){
+      for(const label of DEFAULT_CHECKLIST){
+        await add("checklistItems", {label});
+      }
+    }
+    const existingCriteria = await getAll("feedbackCriteria");
+    if(existingCriteria.length === 0){
+      for(const [year, labels] of Object.entries(DEFAULT_FEEDBACK_CRITERIA)){
+        for(const label of labels){
+          await add("feedbackCriteria", {year: parseInt(year, 10), label});
+        }
+      }
+    }
+    populateTypeSelect();
+    renderLegend();
+    await renderSidebar();
+  }).catch(err => {
+    console.error(err);
+    document.getElementById("main").innerHTML = "<p>IndexedDB konnte nicht geöffnet werden. Prüfe, ob dein Browser lokale Speicherung erlaubt (kein privater/inkognito Modus).</p>";
+  });
+
+  // ---------- Export / Import ----------
+  const EXPORT_STORES = ["azubis", "periods", "checklistItems", "checklistStatus", "activities", "feedbackCriteria", "feedbackEntries"];
+
+  async function exportData(){
+    const payload = {app: "praktikumsplaner", version: 1, exportedAt: new Date().toISOString()};
+    for(const store of EXPORT_STORES){
+      payload[store] = await getAll(store);
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `praktikumsplaner-export-${todayISO}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importData(file){
+    let data;
+    try{
+      const text = await file.text();
+      data = JSON.parse(text);
+    } catch(err){
+      alert("Die Datei konnte nicht gelesen werden. Ist es eine gültige JSON-Exportdatei?");
+      return;
+    }
+    const looksValid = data && typeof data === "object" && EXPORT_STORES.some(store => Array.isArray(data[store]));
+    if(!looksValid){
+      alert("Diese Datei sieht nicht wie ein Export des Praktikumsplaners aus.");
+      return;
+    }
+    const counts = EXPORT_STORES.map(store => `${(data[store]||[]).length} ${store}`).join(", ");
+    if(!confirm(`Import ersetzt ALLE aktuell in diesem Browser gespeicherten Daten durch den Inhalt der Datei (${counts}). Fortfahren?`)){
+      return;
+    }
+    for(const store of EXPORT_STORES){
+      await clearStore(store);
+      for(const record of (data[store] || [])){
+        await put(store, record);
+      }
+    }
+    currentAzubiId = null;
+    editingPeriodId = null;
+    editingActivityId = null;
+    document.getElementById("detail").style.display = "none";
+    document.getElementById("empty-state").style.display = "block";
+    await renderSidebar();
+    alert("Import abgeschlossen.");
+  }
+
+  document.getElementById("export-btn").addEventListener("click", exportData);
+
+  const importInput = document.getElementById("import-file-input");
+  document.getElementById("import-btn").addEventListener("click", () => importInput.click());
+  importInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if(file) await importData(file);
+    e.target.value = "";
+  });
+
+  function populateTypeSelect(){
+    const sel = document.getElementById("period-type");
+    sel.innerHTML = Object.entries(TYPES).map(([key,t]) => `<option value="${key}">${t.label}</option>`).join("");
+  }
+
+  function renderLegend(){
+    const el = document.getElementById("cal-legend");
+    el.innerHTML = Object.values(TYPES).map(t =>
+      `<span><i style="background:${t.color}"></i>${t.label}</span>`
+    ).join("");
+  }
+
+  // ---------- Sidebar ----------
+  let archiveExpanded = false;
+
+  async function renderSidebar(){
+    const azubis = await getAll("azubis");
+    azubis.sort((a,b) => a.name.localeCompare(b.name, "de"));
+    const active = azubis.filter(a => !a.archived);
+    const archived = azubis.filter(a => a.archived);
+
+    const listEl = document.getElementById("azubi-list");
+    listEl.innerHTML = "";
+    if(active.length === 0){
+      const hint = document.createElement("li");
+      hint.id = "empty-list-hint";
+      hint.textContent = "Noch keine aktiven Azubis angelegt.";
+      listEl.appendChild(hint);
+    } else {
+      for(const azubi of active){
+        listEl.appendChild(await buildAzubiListItem(azubi));
+      }
+    }
+
+    const archiveCountEl = document.getElementById("archive-count");
+    const archiveListEl = document.getElementById("archive-list");
+    archiveCountEl.textContent = archived.length;
+    document.getElementById("archive-section").style.display = archived.length === 0 ? "none" : "block";
+    archiveListEl.style.display = archiveExpanded ? "block" : "none";
+    document.getElementById("archive-toggle").setAttribute("aria-expanded", String(archiveExpanded));
+    archiveListEl.innerHTML = "";
+    for(const azubi of archived){
+      const li = await buildAzubiListItem(azubi, true);
+      archiveListEl.appendChild(li);
+    }
+  }
+
+  async function buildAzubiListItem(azubi, isArchived){
+    const periods = await getAllByIndex("periods", "azubiId", azubi.id);
+    const status = isArchived
+      ? {color: "#847F70", text: azubi.archivedAt ? `Archiviert am ${formatDE(azubi.archivedAt)}` : "Archiviert"}
+      : computeStatus(periods);
+    const li = document.createElement("li");
+    if(isArchived) li.classList.add("archived-item");
+    li.style.setProperty("--status-color", status.color);
+    if(azubi.id === currentAzubiId) li.classList.add("active");
+    li.innerHTML = `
+      <div class="azubi-name">${escapeHTML(azubi.name)}</div>
+      <div class="azubi-status">${escapeHTML(status.text)}</div>
+    `;
+    li.addEventListener("click", () => selectAzubi(azubi.id));
+    return li;
+  }
+
+  document.getElementById("archive-toggle").addEventListener("click", () => {
+    archiveExpanded = !archiveExpanded;
+    renderSidebar();
+  });
+
+  function computeStatus(periods){
+    const active = periods.find(p => p.start <= todayISO && todayISO <= p.end);
+    if(active){
+      return {
+        color: TYPES[active.type].color,
+        text: `${TYPES[active.type].label} · bis ${formatDE(active.end)}`
+      };
+    }
+    const upcoming = periods.filter(p => p.start > todayISO).sort((a,b) => a.start.localeCompare(b.start))[0];
+    if(upcoming){
+      return {
+        color: "#B8B2A0",
+        text: `Ab ${formatDE(upcoming.start)}: ${TYPES[upcoming.type].label}`
+      };
+    }
+    const past = periods.filter(p => p.end < todayISO).sort((a,b) => b.end.localeCompare(a.end))[0];
+    if(past){
+      return { color:"#4A4738", text:`Kein aktueller Abschnitt (zuletzt ${TYPES[past.type].label} bis ${formatDE(past.end)})` };
+    }
+    return { color:"#847F70", text:"Keine Termine erfasst" };
+  }
+
+  // ---------- Add / delete Azubi ----------
+  const addBtn = document.getElementById("add-azubi-btn");
+  const addForm = document.getElementById("add-azubi-form");
+  addBtn.addEventListener("click", () => {
+    addForm.classList.toggle("open");
+    if(addForm.classList.contains("open")) document.getElementById("new-azubi-name").focus();
+  });
+  document.getElementById("cancel-add-azubi").addEventListener("click", () => {
+    addForm.classList.remove("open");
+    addForm.reset();
+  });
+  addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("new-azubi-name").value.trim();
+    const role = document.getElementById("new-azubi-role").value.trim();
+    const trainingYear = parseInt(document.getElementById("new-azubi-year").value, 10) || 1;
+    const trainerName = document.getElementById("new-azubi-trainer").value.trim();
+    const profileUrl = document.getElementById("new-azubi-profile").value.trim();
+    if(!name) return;
+    const id = await add("azubis", {name, role, trainingYear, trainerName, profileUrl});
+    addForm.reset();
+    addForm.classList.remove("open");
+    await renderSidebar();
+    selectAzubi(id);
+  });
+
+  document.getElementById("delete-azubi-btn").addEventListener("click", async () => {
+    if(currentAzubiId === null) return;
+    const azubi = await get("azubis", currentAzubiId);
+    if(!confirm(`"${azubi.name}" inkl. aller Zeitabschnitte, Checklisten- und Feedback-Daten wirklich löschen?`)) return;
+    const periods = await getAllByIndex("periods", "azubiId", currentAzubiId);
+    for(const p of periods) await del("periods", p.id);
+    const feedbackEntries = await getAllByIndex("feedbackEntries", "azubiId", currentAzubiId);
+    for(const fe of feedbackEntries) await del("feedbackEntries", fe.id);
+    await del("checklistStatus", currentAzubiId);
+    await del("azubis", currentAzubiId);
+    currentAzubiId = null;
+    document.getElementById("detail").style.display = "none";
+    document.getElementById("empty-state").style.display = "block";
+    await renderSidebar();
+  });
+
+  // ---------- Select Azubi ----------
+  async function selectAzubi(id){
+    currentAzubiId = id;
+    editingPeriodId = null;
+    editingActivityId = null;
+    checklistOverride = null;
+    feedbackViewYear = null;
+    viewDate = new Date();
+    document.getElementById("empty-state").style.display = "none";
+    document.getElementById("detail").style.display = "block";
+    resetPeriodForm();
+    resetActivityForm();
+    await renderSidebar();
+    await renderDetail();
+  }
+
+  async function renderDetail(){
+    const azubi = await get("azubis", currentAzubiId);
+    if(!azubi) return;
+    document.getElementById("detail-name").textContent = azubi.name;
+    document.getElementById("detail-role").textContent = azubi.role || "";
+
+    const badge = document.getElementById("archived-badge");
+    const archiveBtn = document.getElementById("archive-toggle-azubi-btn");
+    if(azubi.archived){
+      badge.style.display = "inline-block";
+      archiveBtn.textContent = "Aus Archiv zurückholen";
+    } else {
+      badge.style.display = "none";
+      archiveBtn.textContent = "Praktikum abschließen & archivieren";
+    }
+
+    const periods = await getAllByIndex("periods", "azubiId", currentAzubiId);
+    const status = azubi.archived
+      ? {color: "#847F70", text: azubi.archivedAt ? `Archiviert am ${formatDE(azubi.archivedAt)}` : "Archiviert"}
+      : computeStatus(periods);
+    document.getElementById("detail-status-line").style.setProperty("--status-color", status.color);
+    document.getElementById("detail-status-text").textContent = status.text;
+
+    document.getElementById("detail-year-select").value = String(azubi.trainingYear || 1);
+    if(feedbackViewYear === null) feedbackViewYear = azubi.trainingYear || 1;
+
+    document.getElementById("detail-trainer-input").value = azubi.trainerName || "";
+    document.getElementById("detail-profile-input").value = azubi.profileUrl || "";
+    const profileOpenLink = document.getElementById("detail-profile-open");
+    if(azubi.profileUrl){
+      profileOpenLink.href = azubi.profileUrl;
+      profileOpenLink.classList.remove("disabled");
+    } else {
+      profileOpenLink.href = "#";
+      profileOpenLink.classList.add("disabled");
+    }
+
+    renderPresenceBanner(periods, azubi);
+    renderCalendar(periods);
+    renderComposition(periods);
+    renderProgress(periods);
+    renderPeriodList(periods);
+    await renderActivities();
+    await renderChecklist();
+    updateChecklistVisibility(periods);
+    await renderFeedback(azubi.trainingYear || 1);
+  }
+
+  document.getElementById("detail-year-select").addEventListener("change", async (e) => {
+    if(currentAzubiId === null) return;
+    const azubi = await get("azubis", currentAzubiId);
+    if(!azubi) return;
+    azubi.trainingYear = parseInt(e.target.value, 10) || 1;
+    await put("azubis", azubi);
+    feedbackViewYear = azubi.trainingYear;
+    await renderSidebar();
+    await renderDetail();
+  });
+
+  document.getElementById("detail-trainer-input").addEventListener("change", async (e) => {
+    if(currentAzubiId === null) return;
+    const azubi = await get("azubis", currentAzubiId);
+    if(!azubi) return;
+    azubi.trainerName = e.target.value.trim();
+    await put("azubis", azubi);
+  });
+
+  document.getElementById("detail-profile-input").addEventListener("change", async (e) => {
+    if(currentAzubiId === null) return;
+    const azubi = await get("azubis", currentAzubiId);
+    if(!azubi) return;
+    azubi.profileUrl = e.target.value.trim();
+    await put("azubis", azubi);
+    const profileOpenLink = document.getElementById("detail-profile-open");
+    if(azubi.profileUrl){
+      profileOpenLink.href = azubi.profileUrl;
+      profileOpenLink.classList.remove("disabled");
+    } else {
+      profileOpenLink.href = "#";
+      profileOpenLink.classList.add("disabled");
+    }
+  });
+
+  document.getElementById("archive-toggle-azubi-btn").addEventListener("click", async () => {
+    if(currentAzubiId === null) return;
+    const azubi = await get("azubis", currentAzubiId);
+    if(!azubi) return;
+    if(azubi.archived){
+      delete azubi.archived;
+      delete azubi.archivedAt;
+    } else {
+      if(!confirm(`"${azubi.name}" als abgeschlossen ins Archiv verschieben? Alle Daten bleiben erhalten und sind über das Archiv weiter einsehbar.`)) return;
+      azubi.archived = true;
+      azubi.archivedAt = todayISO;
+    }
+    await put("azubis", azubi);
+    await renderSidebar();
+    await renderDetail();
+  });
+
+  // Weist jedem Werktag im Gesamtzeitraum genau eine Kategorie zu (erster passender Zeitabschnitt).
+  // So werden sich überschneidende Zeitabschnitte nicht doppelt gezählt.
+  // Ermittelt die Kategorie für einen einzelnen Tag: Unterbrechungen (Seminar, Berufsschule, Urlaub,
+  // Krankheit, Sonstiges) haben Vorrang vor dem Praktikums-Rahmen. So kann "Praktikum" als ein
+  // durchgehender Zeitraum eingetragen werden, ohne ihn um jede Unterbrechung herum manuell zu teilen.
+  function findDayType(dateISO, periods){
+    const interruption = periods.find(p => NON_WORKING_TYPES.includes(p.type) && p.start <= dateISO && dateISO <= p.end);
+    if(interruption) return interruption.type;
+    const frame = periods.find(p => p.type === "praktikum" && p.start <= dateISO && dateISO <= p.end);
+    if(frame) return "praktikum";
+    return null;
+  }
+
+  // Weist jedem Werktag im Gesamtzeitraum genau eine Kategorie zu (siehe findDayType).
+  function buildDayAssignments(periods){
+    if(periods.length === 0) return {spanStart:null, spanEnd:null, list:[]};
+    const spanStart = periods.reduce((min, p) => p.start < min ? p.start : min, periods[0].start);
+    const spanEnd = periods.reduce((max, p) => p.end > max ? p.end : max, periods[0].end);
+    const list = [];
+    let d = new Date(spanStart + "T00:00:00");
+    const end = new Date(spanEnd + "T00:00:00");
+    while(d <= end){
+      const day = d.getDay();
+      if(day !== 0 && day !== 6){
+        const iso = isoDate(d);
+        const type = findDayType(iso, periods);
+        if(type) list.push({date: iso, type});
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return {spanStart, spanEnd, list};
+  }
+
+  // Warnt nur bei echten Konflikten: zwei sich überschneidende Unterbrechungen (z. B. Urlaub + Krankheit
+  // am selben Tag). Dass Unterbrechungen den Praktikums-Rahmen überlappen, ist gewollt und kein Konflikt.
+  function countOverlapDays(periods, list){
+    const interruptions = periods.filter(p => NON_WORKING_TYPES.includes(p.type));
+    const naiveSum = interruptions.reduce((sum, p) => sum + countWeekdays(p.start, p.end), 0);
+    const actualInterruptionDays = list.filter(item => NON_WORKING_TYPES.includes(item.type)).length;
+    return Math.max(0, naiveSum - actualInterruptionDays);
+  }
+
+  // Kategorien, die nicht als aktive Praktikumszeit zählen (weder verstrichen noch verbleibend) –
+  // nur "praktikum" ist Zeit, die die Azubis tatsächlich bei uns verbringen.
+  const NON_WORKING_TYPES = ["seminar", "berufsschule", "urlaub", "krankheit", "sonstiges"];
+
+  function nextWeekdayAfter(dateISO){
+    let d = new Date(dateISO + "T00:00:00");
+    d.setDate(d.getDate() + 1);
+    while(d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+    return isoDate(d);
+  }
+
+  // ---------- Presence banner ----------
+  function renderPresenceBanner(periods, azubi){
+    const banner = document.getElementById("presence-banner");
+    if(azubi.archived || periods.length === 0){
+      banner.style.display = "none";
+      return;
+    }
+
+    const todayType = findDayType(todayISO, periods);
+
+    if(todayType && NON_WORKING_TYPES.includes(todayType)){
+      const covering = periods.find(p => p.type === todayType && p.start <= todayISO && todayISO <= p.end);
+      const returnDate = nextWeekdayAfter(covering.end);
+      banner.style.setProperty("--banner-color", TYPES[todayType].color);
+      banner.innerHTML = `<strong>Aktuell abwesend: ${escapeHTML(TYPES[todayType].label)}</strong> bis ${formatDE(covering.end)} · zurück am ${formatDE(returnDate)}`;
+      banner.style.display = "block";
+      return;
+    }
+
+    if(todayType !== "praktikum"){
+      // Heute außerhalb des erfassten Praktikums-Rahmens – nichts Sinnvolles anzuzeigen
+      banner.style.display = "none";
+      return;
+    }
+
+    const upcoming = periods
+      .filter(p => NON_WORKING_TYPES.includes(p.type) && p.start > todayISO)
+      .sort((a,b) => a.start.localeCompare(b.start))[0];
+
+    if(!upcoming){
+      banner.style.setProperty("--banner-color", TYPES.praktikum.color);
+      banner.innerHTML = `<strong>Durchgehend anwesend</strong> – keine weitere Abwesenheit erfasst.`;
+      banner.style.display = "block";
+      return;
+    }
+
+    const daysUntil = Math.max(0, countWeekdays(todayISO, upcoming.start) - 1);
+    banner.style.setProperty("--banner-color", TYPES[upcoming.type].color);
+    banner.innerHTML = `<strong>Noch ${daysUntil} ${daysUntil === 1 ? "Werktag" : "Werktage"} da</strong> · dann ${escapeHTML(TYPES[upcoming.type].label)} ab ${formatDE(upcoming.start)} (bis ${formatDE(upcoming.end)})`;
+    banner.style.display = "block";
+  }
+
+  // ---------- Progress ----------
+  function renderProgress(periods){
+    const barWrap = document.getElementById("progress-bar");
+    const seg = barWrap.querySelector(".seg-elapsed");
+    const elapsedEl = document.getElementById("progress-elapsed-value");
+    const remainingEl = document.getElementById("progress-remaining-value");
+    const rangeEl = document.getElementById("progress-range");
+
+    if(periods.length === 0){
+      seg.style.width = "0%";
+      elapsedEl.textContent = "–";
+      remainingEl.textContent = "–";
+      rangeEl.innerHTML = `<span id="progress-empty">Noch keine Zeitabschnitte erfasst – der Fortschritt erscheint, sobald welche eingetragen sind.</span>`;
+      return;
+    }
+
+    const {spanStart, spanEnd, list} = buildDayAssignments(periods);
+
+    const praktikumDays = list.filter(item => item.type === "praktikum");
+    const netTotal = praktikumDays.length;
+    const elapsedNet = praktikumDays.filter(item => item.date <= todayISO).length;
+    const remainingNet = netTotal - elapsedNet;
+    const excludedTotal = list.filter(item => NON_WORKING_TYPES.includes(item.type)).length;
+    const pct = netTotal > 0 ? (elapsedNet / netTotal * 100) : 0;
+
+    seg.style.width = pct + "%";
+    elapsedEl.textContent = `${elapsedNet} ${elapsedNet === 1 ? "Werktag" : "Werktage"} (${pct.toFixed(0)}%)`;
+    remainingEl.textContent = `${remainingNet} ${remainingNet === 1 ? "Werktag" : "Werktage"}`;
+
+    let statusLine;
+    if(todayISO < spanStart){
+      statusLine = `Beginnt am ${formatDE(spanStart)}, endet am ${formatDE(spanEnd)}.`;
+    } else if(todayISO > spanEnd){
+      statusLine = `Zeitraum ${formatDE(spanStart)} – ${formatDE(spanEnd)} ist abgeschlossen.`;
+    } else {
+      statusLine = `Zeitraum ${formatDE(spanStart)} – ${formatDE(spanEnd)}, heute Tag ${elapsedNet} von ${netTotal} reinen Praktikumstagen.`;
+    }
+    if(excludedTotal > 0){
+      statusLine += ` Seminar, Berufsschule, Urlaub, Krankheit und Sonstiges (${excludedTotal} ${excludedTotal === 1 ? "Werktag" : "Werktage"}) sind bereits herausgerechnet.`;
+    }
+    rangeEl.textContent = statusLine;
+  }
+
+  // ---------- Composition ----------
+  function renderComposition(periods){
+    const bar = document.getElementById("comp-bar");
+    const legend = document.getElementById("comp-legend");
+    const totalEl = document.getElementById("comp-total");
+
+    if(periods.length === 0){
+      bar.innerHTML = "";
+      legend.innerHTML = `<div id="comp-empty">Noch keine Zeitabschnitte erfasst – die Zusammensetzung erscheint, sobald welche eingetragen sind.</div>`;
+      totalEl.textContent = "";
+      return;
+    }
+
+    const {list} = buildDayAssignments(periods);
+    const daysByType = {};
+    let totalDays = 0;
+    for(const item of list){
+      daysByType[item.type] = (daysByType[item.type] || 0) + 1;
+      totalDays++;
+    }
+    const overlapDays = countOverlapDays(periods, list);
+
+    bar.innerHTML = "";
+    legend.innerHTML = "";
+
+    const order = Object.keys(TYPES).filter(t => daysByType[t]);
+    for(const type of order){
+      const days = daysByType[type];
+      const pct = totalDays > 0 ? (days / totalDays * 100) : 0;
+
+      const seg = document.createElement("div");
+      seg.className = "seg";
+      seg.style.width = pct + "%";
+      seg.style.background = TYPES[type].color;
+      seg.title = `${TYPES[type].label}: ${pct.toFixed(1)}%`;
+      bar.appendChild(seg);
+
+      const row = document.createElement("div");
+      row.className = "comp-row";
+      row.innerHTML = `
+        <i style="background:${TYPES[type].color}"></i>
+        <span>${TYPES[type].label}</span>
+        <span class="comp-pct">${pct.toFixed(1)}%</span>
+        <span class="comp-days">(${days} ${days === 1 ? "Werktag" : "Werktage"})</span>
+      `;
+      legend.appendChild(row);
+    }
+    totalEl.textContent = `Erfasster Zeitraum insgesamt: ${totalDays} ${totalDays === 1 ? "Werktag" : "Werktage"}`;
+    if(overlapDays > 0){
+      totalEl.innerHTML += `<br><span style="color:var(--c-krankheit);">Achtung: Zeitabschnitte überschneiden sich an ${overlapDays} ${overlapDays === 1 ? "Werktag" : "Werktagen"} – bitte prüfen, welcher Abschnitt korrekt ist.</span>`;
+    }
+  }
+
+  // ---------- Calendar ----------
+  function renderCalendar(periods){
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    document.getElementById("cal-month-label").textContent = `${MONTH_NAMES[month]} ${year}`;
+
+    const grid = document.getElementById("cal-grid");
+    grid.innerHTML = "";
+    WEEKDAYS.forEach(w => {
+      const el = document.createElement("div");
+      el.className = "cal-weekday";
+      el.textContent = w;
+      grid.appendChild(el);
+    });
+
+    const firstDay = new Date(year, month, 1);
+    const offset = (firstDay.getDay() + 6) % 7; // Monday = 0
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+
+    for(let i=0; i<offset; i++){
+      const blank = document.createElement("div");
+      blank.className = "cal-day blank";
+      grid.appendChild(blank);
+    }
+
+    for(let day=1; day<=daysInMonth; day++){
+      const dateISO = isoDate(new Date(year, month, day));
+      const type = findDayType(dateISO, periods);
+      const cell = document.createElement("div");
+      cell.className = "cal-day";
+      if(dateISO === todayISO) cell.classList.add("today");
+      if(dateISO < todayISO) cell.classList.add("past");
+      if(type){
+        cell.classList.add("has-period");
+        cell.style.background = TYPES[type].color;
+        cell.style.borderColor = TYPES[type].color;
+        cell.innerHTML = `<span class="num">${day}</span><span class="type-label">${TYPES[type].label}</span>`;
+      } else {
+        cell.innerHTML = `<span class="num">${day}</span>`;
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  document.getElementById("cal-prev").addEventListener("click", () => {
+    viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1);
+    renderDetail();
+  });
+  document.getElementById("cal-next").addEventListener("click", () => {
+    viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1);
+    renderDetail();
+  });
+  document.getElementById("cal-today-btn").addEventListener("click", () => {
+    viewDate = new Date();
+    renderDetail();
+  });
+
+  // ---------- Periods ----------
+  function renderPeriodList(periods){
+    const wrap = document.getElementById("period-list");
+    if(periods.length === 0){
+      wrap.innerHTML = `<div id="no-periods">Noch keine Zeitabschnitte erfasst.</div>`;
+      return;
+    }
+    const sorted = [...periods].sort((a,b) => a.start.localeCompare(b.start));
+    wrap.innerHTML = "";
+    for(const p of sorted){
+      const row = document.createElement("div");
+      row.className = "period-item";
+      row.innerHTML = `
+        <span class="period-swatch" style="background:${TYPES[p.type].color}"></span>
+        <span class="period-type">${TYPES[p.type].label}</span>
+        <span class="period-range">${formatDE(p.start)} – ${formatDE(p.end)}</span>
+        <span class="period-note">${escapeHTML(p.note || "")}</span>
+        <span class="period-actions">
+          <button type="button" data-action="edit" data-id="${p.id}">Bearbeiten</button>
+          <button type="button" data-action="delete" data-id="${p.id}">Löschen</button>
+        </span>
+      `;
+      wrap.appendChild(row);
+    }
+    wrap.querySelectorAll("[data-action='edit']").forEach(btn => {
+      btn.addEventListener("click", () => startEditPeriod(parseInt(btn.dataset.id)));
+    });
+    wrap.querySelectorAll("[data-action='delete']").forEach(btn => {
+      btn.addEventListener("click", () => deletePeriod(parseInt(btn.dataset.id)));
+    });
+  }
+
+  async function startEditPeriod(id){
+    const p = await get("periods", id);
+    if(!p) return;
+    editingPeriodId = id;
+    document.getElementById("period-type").value = p.type;
+    document.getElementById("period-start").value = p.start;
+    document.getElementById("period-end").value = p.end;
+    document.getElementById("period-note").value = p.note || "";
+    document.getElementById("period-submit-btn").textContent = "Änderungen speichern";
+    document.getElementById("period-form-cancel").style.display = "inline-block";
+    document.getElementById("period-form").scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
+  document.getElementById("period-form-cancel").addEventListener("click", () => {
+    resetPeriodForm();
+  });
+
+  function resetPeriodForm(){
+    editingPeriodId = null;
+    document.getElementById("period-form").reset();
+    document.getElementById("period-submit-btn").textContent = "Hinzufügen";
+    document.getElementById("period-form-cancel").style.display = "none";
+  }
+
+  async function deletePeriod(id){
+    if(!confirm("Diesen Zeitabschnitt löschen?")) return;
+    await del("periods", id);
+    if(editingPeriodId === id) resetPeriodForm();
+    await renderSidebar();
+    await renderDetail();
+  }
+
+  document.getElementById("period-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const type = document.getElementById("period-type").value;
+    const start = document.getElementById("period-start").value;
+    const end = document.getElementById("period-end").value;
+    const note = document.getElementById("period-note").value.trim();
+    if(!start || !end){ return; }
+    if(start > end){
+      alert("Das Enddatum darf nicht vor dem Startdatum liegen.");
+      return;
+    }
+    if(editingPeriodId){
+      await put("periods", {id: editingPeriodId, azubiId: currentAzubiId, type, start, end, note});
+    } else {
+      await add("periods", {azubiId: currentAzubiId, type, start, end, note});
+    }
+    resetPeriodForm();
+    await renderSidebar();
+    await renderDetail();
+  });
+
+  // ---------- Activities ----------
+  let editingActivityId = null;
+
+  async function renderActivities(){
+    const activities = await getAllByIndex("activities", "azubiId", currentAzubiId);
+    const wrap = document.getElementById("activity-list");
+    if(activities.length === 0){
+      wrap.innerHTML = `<div id="no-activities">Noch keine Einträge. Halte hier fest, was der Azubi bereits bearbeitet hat – hilfreich für das spätere Feedbackgespräch.</div>`;
+      return;
+    }
+    const sorted = [...activities].sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
+    wrap.innerHTML = "";
+    for(const a of sorted){
+      const item = document.createElement("div");
+      item.className = "activity-item";
+      item.innerHTML = `
+        <div class="activity-date">${formatDE(a.date)}</div>
+        <div class="activity-body">
+          <div class="activity-title">${escapeHTML(a.title)}</div>
+          ${a.note ? `<div class="activity-note">${escapeHTML(a.note)}</div>` : ""}
+          <div class="activity-actions">
+            <button type="button" data-action="edit" data-id="${a.id}">Bearbeiten</button>
+            <button type="button" data-action="delete" data-id="${a.id}">Löschen</button>
+          </div>
+        </div>
+      `;
+      wrap.appendChild(item);
+    }
+    wrap.querySelectorAll("[data-action='edit']").forEach(btn => {
+      btn.addEventListener("click", () => startEditActivity(parseInt(btn.dataset.id)));
+    });
+    wrap.querySelectorAll("[data-action='delete']").forEach(btn => {
+      btn.addEventListener("click", () => deleteActivity(parseInt(btn.dataset.id)));
+    });
+  }
+
+  async function startEditActivity(id){
+    const a = await get("activities", id);
+    if(!a) return;
+    editingActivityId = id;
+    document.getElementById("activity-date").value = a.date;
+    document.getElementById("activity-title").value = a.title;
+    document.getElementById("activity-note").value = a.note || "";
+    document.getElementById("activity-submit-btn").textContent = "Änderungen speichern";
+    document.getElementById("activity-form-cancel").style.display = "inline-block";
+    document.getElementById("activity-form").scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
+  function resetActivityForm(){
+    editingActivityId = null;
+    document.getElementById("activity-form").reset();
+    document.getElementById("activity-date").value = todayISO;
+    document.getElementById("activity-submit-btn").textContent = "Hinzufügen";
+    document.getElementById("activity-form-cancel").style.display = "none";
+  }
+
+  document.getElementById("activity-form-cancel").addEventListener("click", () => {
+    resetActivityForm();
+  });
+
+  async function deleteActivity(id){
+    if(!confirm("Diesen Eintrag löschen?")) return;
+    await del("activities", id);
+    if(editingActivityId === id) resetActivityForm();
+    await renderActivities();
+  }
+
+  document.getElementById("activity-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const date = document.getElementById("activity-date").value;
+    const title = document.getElementById("activity-title").value.trim();
+    const note = document.getElementById("activity-note").value.trim();
+    if(!date || !title) return;
+    if(editingActivityId){
+      await put("activities", {id: editingActivityId, azubiId: currentAzubiId, date, title, note});
+    } else {
+      await add("activities", {azubiId: currentAzubiId, date, title, note});
+    }
+    resetActivityForm();
+    await renderActivities();
+  });
+
+  // ---------- Feedback criteria ----------
+  async function renderFeedback(currentTrainingYear){
+    const tabsEl = document.getElementById("feedback-year-tabs");
+    tabsEl.innerHTML = "";
+    for(const year of [1, 2, 3]){
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.className = "feedback-tab" + (year === feedbackViewYear ? " active" : "") + (year === currentTrainingYear ? " is-current-year" : "");
+      tab.textContent = `${year}. Jahr`;
+      tab.title = year === currentTrainingYear ? "Aktuelles Ausbildungsjahr" : "";
+      tab.addEventListener("click", async () => {
+        feedbackViewYear = year;
+        await renderFeedback(currentTrainingYear);
+      });
+      tabsEl.appendChild(tab);
+    }
+
+    const criteria = (await getAllByIndex("feedbackCriteria", "year", feedbackViewYear))
+      .sort((a,b) => a.id - b.id);
+    const entries = await getAllByIndex("feedbackEntries", "azubiId", currentAzubiId);
+
+    const list = document.getElementById("feedback-criteria-list");
+    list.innerHTML = "";
+    if(criteria.length === 0){
+      list.innerHTML = `<div id="no-feedback-criteria">Noch keine Kriterien für dieses Jahr. Füge unten welche hinzu.</div>`;
+      return;
+    }
+
+    for(const criterion of criteria){
+      const entry = entries.find(e => e.criteriaId === criterion.id) || {rating: null, note: ""};
+      const li = document.createElement("li");
+      li.className = "feedback-criterion";
+
+      const top = document.createElement("div");
+      top.className = "feedback-criterion-top";
+      const label = document.createElement("span");
+      label.className = "feedback-criterion-label";
+      label.textContent = criterion.label;
+      const rating = document.createElement("div");
+      rating.className = "feedback-rating";
+      for(let n = 1; n <= 5; n++){
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = n;
+        if(entry.rating === n) btn.classList.add("selected");
+        btn.addEventListener("click", async () => {
+          const newRating = entry.rating === n ? null : n; // erneutes Klicken hebt Bewertung auf
+          await saveFeedbackEntry(criterion.id, {rating: newRating});
+          await renderFeedback(currentTrainingYear);
+        });
+        rating.appendChild(btn);
+      }
+      top.appendChild(label);
+      top.appendChild(rating);
+
+      const note = document.createElement("textarea");
+      note.className = "feedback-criterion-note";
+      note.placeholder = "Beobachtungen, Beispiele, Notizen …";
+      note.value = entry.note || "";
+      note.addEventListener("input", () => {
+        clearTimeout(feedbackNoteTimers[criterion.id]);
+        feedbackNoteTimers[criterion.id] = setTimeout(async () => {
+          await saveFeedbackEntry(criterion.id, {note: note.value});
+        }, 500);
+      });
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "feedback-remove-btn";
+      removeBtn.textContent = "Kriterium entfernen";
+      removeBtn.addEventListener("click", async () => {
+        if(!confirm(`"${criterion.label}" aus den Kriterien für alle Azubis (${feedbackViewYear}. Jahr) entfernen?`)) return;
+        await del("feedbackCriteria", criterion.id);
+        await renderFeedback(currentTrainingYear);
+      });
+
+      li.appendChild(top);
+      li.appendChild(note);
+      li.appendChild(removeBtn);
+      list.appendChild(li);
+    }
+  }
+
+  async function saveFeedbackEntry(criteriaId, changes){
+    const entries = await getAllByIndex("feedbackEntries", "azubiId", currentAzubiId);
+    let entry = entries.find(e => e.criteriaId === criteriaId);
+    if(entry){
+      Object.assign(entry, changes);
+      await put("feedbackEntries", entry);
+    } else {
+      await add("feedbackEntries", {azubiId: currentAzubiId, criteriaId, rating: null, note: "", ...changes});
+    }
+  }
+
+  document.getElementById("add-feedback-criterion").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("new-feedback-criterion");
+    const label = input.value.trim();
+    if(!label) return;
+    await add("feedbackCriteria", {year: feedbackViewYear, label});
+    input.value = "";
+    const azubi = await get("azubis", currentAzubiId);
+    await renderFeedback(azubi ? (azubi.trainingYear || 1) : 1);
+  });
+
+  // ---------- Checklist visibility ----------
+  function checklistDefaultVisible(periods){
+    const praktikumPeriods = periods.filter(p => p.type === "praktikum");
+    if(praktikumPeriods.length === 0) return true;
+    const earliestStart = praktikumPeriods.reduce((min, p) => p.start < min ? p.start : min, praktikumPeriods[0].start);
+    return todayISO < earliestStart;
+  }
+
+  function updateChecklistVisibility(periods){
+    const body = document.getElementById("checklist-body");
+    const msg = document.getElementById("checklist-collapsed-msg");
+    const btn = document.getElementById("checklist-toggle-btn");
+    const defaultVisible = checklistDefaultVisible(periods);
+    const visible = checklistOverride === null ? defaultVisible : checklistOverride;
+
+    body.classList.toggle("hidden", !visible);
+    msg.style.display = visible ? "none" : "block";
+    btn.textContent = visible ? "Ausblenden" : "Einblenden";
+  }
+
+  document.getElementById("checklist-toggle-btn").addEventListener("click", async () => {
+    const periods = await getAllByIndex("periods", "azubiId", currentAzubiId);
+    const defaultVisible = checklistDefaultVisible(periods);
+    const currentlyVisible = checklistOverride === null ? defaultVisible : checklistOverride;
+    checklistOverride = !currentlyVisible;
+    updateChecklistVisibility(periods);
+  });
+
+  // ---------- Checklist ----------
+  async function renderChecklist(){
+    const items = await getAll("checklistItems");
+    let status = await get("checklistStatus", currentAzubiId);
+    if(!status){
+      status = {azubiId: currentAzubiId, checked:{}, freetext:""};
+    }
+    const list = document.getElementById("checklist-items");
+    list.innerHTML = "";
+    for(const item of items){
+      const li = document.createElement("li");
+      const checked = !!status.checked[item.id];
+      if(checked) li.classList.add("checked");
+      const cbId = `chk-${item.id}`;
+      li.innerHTML = `
+        <input type="checkbox" id="${cbId}" ${checked ? "checked" : ""}>
+        <label for="${cbId}">${escapeHTML(item.label)}</label>
+        <button type="button" class="remove-item" data-id="${item.id}">Punkt entfernen</button>
+      `;
+      li.querySelector("input").addEventListener("change", async (e) => {
+        const s = (await get("checklistStatus", currentAzubiId)) || {azubiId: currentAzubiId, checked:{}, freetext:""};
+        s.checked[item.id] = e.target.checked;
+        await put("checklistStatus", s);
+        li.classList.toggle("checked", e.target.checked);
+      });
+      li.querySelector(".remove-item").addEventListener("click", async () => {
+        if(!confirm(`"${item.label}" aus der Checkliste (für alle Azubis) entfernen?`)) return;
+        await del("checklistItems", item.id);
+        await renderChecklist();
+      });
+      list.appendChild(li);
+    }
+    document.getElementById("freetext").value = status.freetext || "";
+  }
+
+  document.getElementById("add-checklist-item").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("new-checklist-item");
+    const label = input.value.trim();
+    if(!label) return;
+    await add("checklistItems", {label});
+    input.value = "";
+    await renderChecklist();
+  });
+
+  document.getElementById("freetext").addEventListener("input", (e) => {
+    clearTimeout(freetextTimer);
+    freetextTimer = setTimeout(async () => {
+      const s = (await get("checklistStatus", currentAzubiId)) || {azubiId: currentAzubiId, checked:{}, freetext:""};
+      s.freetext = e.target.value;
+      await put("checklistStatus", s);
+      const ind = document.getElementById("save-indicator");
+      ind.classList.add("show");
+      setTimeout(() => ind.classList.remove("show"), 1200);
+    }, 500);
+  });
+
+  // ---------- Utils ----------
+  function escapeHTML(str){
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+})();
+</script>
+</body>
+</html>
