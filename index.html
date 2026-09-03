@@ -1704,11 +1704,13 @@
     editingPeriodId = null;
     editingActivityId = null;
     editingNoteId = null;
-    checklistOverride = null;
     feedbackViewYear = null;
-    activityPanelVisible = true;
-    feedbackPanelVisible = true;
-    notePanelVisible = true;
+    const azubi = await get("azubis", id);
+    const pv = getPanelVisibility(azubi);
+    activityPanelVisible = pv.activity;
+    feedbackPanelVisible = pv.feedback;
+    notePanelVisible = pv.notes;
+    checklistOverride = pv.checklist;
     viewDate = new Date();
     document.getElementById("empty-state").style.display = "none";
     document.getElementById("detail").style.display = "block";
@@ -2462,17 +2464,39 @@
     updateIconToggle("feedback-toggle-btn", "feedback-body", feedbackPanelVisible, "Ausblenden", "Einblenden");
   }
 
-  document.getElementById("activity-toggle-btn").addEventListener("click", () => {
+  // Merkt sich je Azubi, welche Kategorien ein-/ausgeklappt sind, damit das beim nächsten Laden erhalten bleibt.
+  function getPanelVisibility(azubi){
+    const pv = (azubi && azubi.panelVisibility) || {};
+    return {
+      activity: pv.activity !== undefined ? pv.activity : true,
+      notes: pv.notes !== undefined ? pv.notes : true,
+      feedback: pv.feedback !== undefined ? pv.feedback : true,
+      checklist: pv.checklist !== undefined ? pv.checklist : null
+    };
+  }
+
+  async function savePanelVisibility(partial){
+    if(currentAzubiId === null) return;
+    const azubi = await get("azubis", currentAzubiId);
+    if(!azubi) return;
+    azubi.panelVisibility = {...getPanelVisibility(azubi), ...partial};
+    await put("azubis", azubi);
+  }
+
+  document.getElementById("activity-toggle-btn").addEventListener("click", async () => {
     activityPanelVisible = !activityPanelVisible;
     applyPanelVisibility();
+    await savePanelVisibility({activity: activityPanelVisible});
   });
-  document.getElementById("note-toggle-btn").addEventListener("click", () => {
+  document.getElementById("note-toggle-btn").addEventListener("click", async () => {
     notePanelVisible = !notePanelVisible;
     applyPanelVisibility();
+    await savePanelVisibility({notes: notePanelVisible});
   });
-  document.getElementById("feedback-toggle-btn").addEventListener("click", () => {
+  document.getElementById("feedback-toggle-btn").addEventListener("click", async () => {
     feedbackPanelVisible = !feedbackPanelVisible;
     applyPanelVisibility();
+    await savePanelVisibility({feedback: feedbackPanelVisible});
   });
 
   // ---------- Checklist visibility ----------
@@ -2504,6 +2528,7 @@
     const currentlyVisible = checklistOverride === null ? defaultVisible : checklistOverride;
     checklistOverride = !currentlyVisible;
     updateChecklistVisibility(periods);
+    await savePanelVisibility({checklist: checklistOverride});
   });
 
   // ---------- Checklist ----------
