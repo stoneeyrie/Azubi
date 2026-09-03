@@ -276,6 +276,108 @@
   }
   #archive-list li:hover, #archive-list li.active{background:var(--ink-soft);}
 
+  /* ---------- Global search ---------- */
+  #global-search-wrap{
+    position:relative;
+    margin:0 20px 14px;
+    display:flex;
+    align-items:center;
+  }
+  #global-search-icon{
+    position:absolute;
+    left:10px;
+    width:15px;
+    height:15px;
+    color:var(--text-onink-soft);
+    pointer-events:none;
+  }
+  #global-search-input{
+    width:100%;
+    background:var(--ink-soft);
+    border:1px solid var(--ink-line);
+    border-radius:5px;
+    color:var(--text-onink);
+    padding:8px 30px 8px 32px;
+    font-size:0.85rem;
+  }
+  #global-search-input::placeholder{color:var(--text-onink-soft);}
+  #global-search-input::-webkit-search-cancel-button{display:none;}
+  #global-search-clear{
+    position:absolute;
+    right:6px;
+    background:none;
+    border:none;
+    color:var(--text-onink-soft);
+    font-size:1.1rem;
+    line-height:1;
+    padding:4px 6px;
+    cursor:pointer;
+    display:none;
+  }
+  #global-search-clear:hover{color:var(--text-onink);}
+  #global-search-wrap.has-query #global-search-clear{display:block;}
+
+  #search-results-count{
+    padding:2px 20px 10px;
+    font-size:0.76rem;
+    color:var(--text-onink-soft);
+  }
+  #search-results-list{
+    display:flex;
+    flex-direction:column;
+    padding:0 12px 12px;
+    gap:2px;
+  }
+  .search-result-item{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:none;
+    border:none;
+    border-radius:5px;
+    padding:9px 8px;
+    cursor:pointer;
+    color:var(--text-onink);
+  }
+  .search-result-item:hover{background:var(--ink-soft);}
+  .search-result-head{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:3px;
+    font-size:0.82rem;
+    font-weight:600;
+  }
+  .search-result-category{
+    font-weight:500;
+    font-size:0.7rem;
+    color:var(--text-onink-soft);
+    background:var(--ink-line);
+    border-radius:3px;
+    padding:1px 6px;
+  }
+  .search-result-snippet{
+    font-size:0.78rem;
+    color:var(--text-onink-soft);
+    line-height:1.4;
+  }
+  .search-result-snippet mark{
+    background:none;
+    color:var(--text-onink);
+    font-weight:700;
+    padding:0;
+  }
+  #search-no-results{padding:10px 20px; font-size:0.83rem; color:var(--text-onink-soft);}
+
+  .search-target-highlight{
+    animation:search-highlight-fade 2.2s ease-out;
+    border-radius:4px;
+  }
+  @keyframes search-highlight-fade{
+    0%{box-shadow:0 0 0 3px var(--c-praktikum); background:rgba(62,107,138,0.12);}
+    100%{box-shadow:0 0 0 0 transparent; background:transparent;}
+  }
+
   #io-actions{
     padding:14px 20px 18px;
     border-top:1px solid var(--ink-line);
@@ -767,16 +869,23 @@
   #no-activities{color:var(--text-soft); font-size:0.87rem;}
 
   /* Notes & appointments */
-  #note-form{display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line);}
+  #note-form{display:flex; flex-wrap:wrap; gap:10px 14px; align-items:flex-end; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line);}
   #note-form .field{display:flex; flex-direction:column; gap:4px;}
   #note-form label{font-size:0.75rem; color:var(--text-soft);}
-  #note-form input{
+  #note-form input,
+  #note-form textarea{
     border:1px solid var(--line);
     border-radius:4px;
     padding:7px 8px;
+    font-family:inherit;
+    font-size:0.87rem;
+    background:var(--paper-raised);
+    color:var(--text);
   }
   #note-date{min-width:150px;}
-  #note-text{min-width:220px; flex:1;}
+  .field-full{width:100%; flex-basis:100%;}
+  #note-text{width:100%; resize:vertical; min-height:56px; line-height:1.4; padding:10px;}
+  .note-form-actions{display:flex; gap:10px; margin-top:2px;}
   #note-form-cancel{display:none;}
 
   #note-list{display:flex; flex-direction:column; gap:2px;}
@@ -904,6 +1013,13 @@
     <p>Azubi-Praktika im Überblick</p>
   </div>
 
+  <div id="global-search-wrap">
+    <svg id="global-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" id="global-search-input" placeholder="Alle Azubis durchsuchen …" aria-label="Alle Azubis und Freitextfelder durchsuchen">
+    <button type="button" id="global-search-clear" title="Suche leeren" aria-label="Suche leeren">×</button>
+  </div>
+
+  <div id="sidebar-main-content">
   <button id="add-azubi-btn" type="button">+ Neuer Azubi</button>
   <form id="add-azubi-form">
     <input type="text" id="new-azubi-name" placeholder="Name" required>
@@ -929,6 +1045,12 @@
       <span class="chev">›</span>
     </button>
     <ul id="archive-list"></ul>
+  </div>
+  </div>
+
+  <div id="search-results-wrap" style="display:none;">
+    <div id="search-results-count"></div>
+    <div id="search-results-list"></div>
   </div>
 
   <div id="io-actions">
@@ -1103,12 +1225,14 @@
             <label for="note-date">Datum (optional)</label>
             <input type="date" id="note-date" name="date">
           </div>
-          <div class="field">
+          <div class="field field-full">
             <label for="note-text">Notiz / Termin</label>
-            <input type="text" id="note-text" name="text" placeholder="z. B. Abgabe Abschlussarbeit Praktikum" required>
+            <textarea id="note-text" name="text" rows="2" placeholder="z. B. Abgabe Abschlussarbeit Praktikum" required></textarea>
           </div>
-          <button type="submit" class="btn-primary" id="note-submit-btn">Hinzufügen</button>
-          <button type="button" class="btn-ghost" id="note-form-cancel">Abbrechen</button>
+          <div class="field-full note-form-actions">
+            <button type="submit" class="btn-primary" id="note-submit-btn">Hinzufügen</button>
+            <button type="button" class="btn-ghost" id="note-form-cancel">Abbrechen</button>
+          </div>
         </form>
         <div id="note-list"></div>
       </div>
@@ -2138,10 +2262,8 @@
       wrap.innerHTML = `<div id="no-notes">Noch keine Notizen oder Termine erfasst.</div>`;
       return;
     }
-    // Termine mit Datum chronologisch zuerst, danach Notizen ohne Datum (nach Anlage-Reihenfolge).
-    const withDate = notes.filter(n => n.date).sort((a,b) => a.date.localeCompare(b.date) || a.id - b.id);
-    const withoutDate = notes.filter(n => !n.date).sort((a,b) => a.id - b.id);
-    const sorted = [...withDate, ...withoutDate];
+    // Neueste Einträge zuerst, unabhängig vom (optionalen) Termin-Datum.
+    const sorted = notes.slice().sort((a,b) => b.id - a.id);
     wrap.innerHTML = "";
     for(const n of sorted){
       const item = document.createElement("div");
@@ -2439,6 +2561,160 @@
       ind.classList.add("show");
       setTimeout(() => ind.classList.remove("show"), 1200);
     }, 500);
+  });
+
+  // ---------- Global search ----------
+  const SEARCH_MIN_LENGTH = 2;
+  let searchDebounceTimer = null;
+
+  function buildSnippet(text, query){
+    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if(idx === -1){
+      return escapeHTML(text.length > 140 ? text.slice(0,140) + "…" : text);
+    }
+    const start = Math.max(0, idx - 40);
+    const end = Math.min(text.length, idx + query.length + 60);
+    const prefix = (start > 0 ? "…" : "") + escapeHTML(text.slice(start, idx));
+    const match = escapeHTML(text.slice(idx, idx + query.length));
+    const suffix = escapeHTML(text.slice(idx + query.length, end)) + (end < text.length ? "…" : "");
+    return `${prefix}<mark>${match}</mark>${suffix}`;
+  }
+
+  async function runGlobalSearch(query){
+    const q = query.trim().toLowerCase();
+    const resultsWrap = document.getElementById("search-results-wrap");
+    const mainContent = document.getElementById("sidebar-main-content");
+    const listEl = document.getElementById("search-results-list");
+    const countEl = document.getElementById("search-results-count");
+
+    if(q.length < SEARCH_MIN_LENGTH){
+      resultsWrap.style.display = "none";
+      mainContent.style.display = "";
+      return;
+    }
+    mainContent.style.display = "none";
+    resultsWrap.style.display = "block";
+
+    const azubis = await getAll("azubis");
+    const results = [];
+
+    for(const azubi of azubis){
+      const push = (category, rawText, extra) => {
+        if(!rawText) return;
+        const idx = rawText.toLowerCase().indexOf(q);
+        if(idx === -1) return;
+        results.push({
+          azubiId: azubi.id,
+          azubiName: azubi.name,
+          category,
+          snippet: buildSnippet(rawText, q),
+          extra
+        });
+      };
+
+      push("Profil", [azubi.name, azubi.role, azubi.trainerName].filter(Boolean).join(" · "), {type:"meta"});
+
+      const periods = await getAllByIndex("periods", "azubiId", azubi.id);
+      for(const p of periods){
+        push(TYPES[p.type] ? TYPES[p.type].label : "Zeitabschnitt", p.note, {type:"periods"});
+      }
+
+      const activities = await getAllByIndex("activities", "azubiId", azubi.id);
+      for(const a of activities){
+        push("Aktivität", [a.title, a.note].filter(Boolean).join(" – "), {type:"activities"});
+      }
+
+      const notes = await getAllByIndex("notes", "azubiId", azubi.id);
+      for(const n of notes){
+        push("Notiz/Termin", n.text, {type:"notes"});
+      }
+
+      const feedbackEntries = await getAllByIndex("feedbackEntries", "azubiId", azubi.id);
+      for(const fe of feedbackEntries){
+        if(!fe.note) continue;
+        const crit = await get("feedbackCriteria", fe.criteriaId);
+        push("Feedback", fe.note, {type:"feedback", year: crit ? crit.year : null});
+      }
+
+      const status = await get("checklistStatus", azubi.id);
+      if(status){
+        push("Freitext (Checkliste)", status.freetext, {type:"freetext"});
+      }
+    }
+
+    if(results.length === 0){
+      listEl.innerHTML = `<div id="search-no-results">Keine Treffer für „${escapeHTML(query.trim())}“.</div>`;
+      countEl.textContent = "";
+      return;
+    }
+
+    countEl.textContent = `${results.length} Treffer${results.length === 1 ? "" : "e"}`;
+    listEl.innerHTML = "";
+    for(const r of results){
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "search-result-item";
+      btn.innerHTML = `
+        <div class="search-result-head">${escapeHTML(r.azubiName)}<span class="search-result-category">${escapeHTML(r.category)}</span></div>
+        <div class="search-result-snippet">${r.snippet}</div>
+      `;
+      btn.addEventListener("click", () => goToSearchResult(r));
+      listEl.appendChild(btn);
+    }
+  }
+
+  async function goToSearchResult(r){
+    document.getElementById("global-search-input").value = "";
+    document.getElementById("global-search-wrap").classList.remove("has-query");
+    document.getElementById("search-results-wrap").style.display = "none";
+    document.getElementById("sidebar-main-content").style.display = "";
+
+    await selectAzubi(r.azubiId);
+
+    if(r.extra && r.extra.type === "freetext"){
+      checklistOverride = true;
+      const periods = await getAllByIndex("periods", "azubiId", r.azubiId);
+      updateChecklistVisibility(periods);
+    }
+
+    if(r.extra && r.extra.type === "feedback" && r.extra.year){
+      feedbackViewYear = r.extra.year;
+      const azubi = await get("azubis", r.azubiId);
+      await renderFeedback(azubi ? (azubi.trainingYear || 1) : 1);
+    }
+
+    const targetIdMap = {
+      meta: "detail-meta-row",
+      periods: "period-list",
+      activities: "activity-list",
+      notes: "note-list",
+      feedback: "feedback-criteria-list",
+      freetext: "freetext-wrap"
+    };
+    const targetId = r.extra ? targetIdMap[r.extra.type] : null;
+    if(targetId){
+      const el = document.getElementById(targetId);
+      if(el){
+        el.scrollIntoView({behavior:"smooth", block:"center"});
+        el.classList.add("search-target-highlight");
+        setTimeout(() => el.classList.remove("search-target-highlight"), 2200);
+      }
+    }
+  }
+
+  document.getElementById("global-search-input").addEventListener("input", (e) => {
+    const val = e.target.value;
+    document.getElementById("global-search-wrap").classList.toggle("has-query", val.length > 0);
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => runGlobalSearch(val), 220);
+  });
+
+  document.getElementById("global-search-clear").addEventListener("click", () => {
+    const input = document.getElementById("global-search-input");
+    input.value = "";
+    document.getElementById("global-search-wrap").classList.remove("has-query");
+    runGlobalSearch("");
+    input.focus();
   });
 
   // ---------- Utils ----------
