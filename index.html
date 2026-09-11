@@ -600,7 +600,7 @@
   #cal-today-btn svg{width:16px; height:16px;}
   #cal-grid{
     display:grid;
-    grid-template-columns:repeat(7,1fr);
+    grid-template-columns:24px repeat(7,1fr);
     gap:4px;
     margin-top:14px;
   }
@@ -611,6 +611,16 @@
     padding-bottom:4px;
     font-weight:500;
   }
+  .cal-week-num{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.62rem;
+    color:var(--text-soft);
+    opacity:0.55;
+    font-variant-numeric:tabular-nums;
+  }
+  .cal-week-num-spacer{opacity:0;}
   .cal-day{
     aspect-ratio:1/0.85;
     border-radius:4px;
@@ -790,6 +800,22 @@
   }
   #period-form input[name="note"]{min-width:180px;}
   #period-form-cancel{display:none;}
+
+  .mode-toggle{display:flex; border:1px solid var(--line); border-radius:5px; overflow:hidden;}
+  .mode-toggle-btn{
+    background:var(--paper-raised);
+    border:none;
+    padding:7px 12px;
+    font-size:0.8rem;
+    cursor:pointer;
+    color:var(--text-soft);
+  }
+  .mode-toggle-btn + .mode-toggle-btn{border-left:1px solid var(--line);}
+  .mode-toggle-btn.active{background:var(--c-praktikum); color:#fff;}
+  .week-input-pair{display:flex; gap:6px;}
+  .week-input-pair input{width:64px;}
+  #period-week-preview{font-size:0.78rem; color:var(--text-soft); margin:-4px 0 2px;}
+  #period-week-preview.error{color:var(--c-krankheit);}
 
   .period-item{
     display:flex;
@@ -1169,18 +1195,44 @@
           <label for="period-type">Art</label>
           <select id="period-type" name="type" required></select>
         </div>
-        <div class="field">
+
+        <div class="field field-mode-toggle">
+          <label>Eingabe</label>
+          <div class="mode-toggle" role="group" aria-label="Eingabeart für den Zeitraum">
+            <button type="button" class="mode-toggle-btn active" id="period-mode-date" aria-pressed="true">Datum</button>
+            <button type="button" class="mode-toggle-btn" id="period-mode-week" aria-pressed="false">Kalenderwoche</button>
+          </div>
+        </div>
+
+        <div class="field period-input-date">
           <label for="period-start">Von</label>
           <input type="date" id="period-start" name="start" required>
         </div>
-        <div class="field">
+        <div class="field period-input-date">
           <label for="period-end">Bis</label>
           <input type="date" id="period-end" name="end" required>
         </div>
+
+        <div class="field period-input-week" hidden>
+          <label for="period-week-start">KW von</label>
+          <div class="week-input-pair">
+            <input type="number" id="period-week-start" min="1" max="53" placeholder="KW">
+            <input type="number" id="period-week-start-year" min="2000" max="2100" placeholder="Jahr">
+          </div>
+        </div>
+        <div class="field period-input-week" hidden>
+          <label for="period-week-end">KW bis</label>
+          <div class="week-input-pair">
+            <input type="number" id="period-week-end" min="1" max="53" placeholder="KW">
+            <input type="number" id="period-week-end-year" min="2000" max="2100" placeholder="Jahr">
+          </div>
+        </div>
+
         <div class="field">
           <label for="period-note">Notiz (optional)</label>
           <input type="text" id="period-note" name="note" placeholder="z. B. Abteilung, Ort …">
         </div>
+        <div class="field-full" id="period-week-preview"></div>
         <button type="submit" class="btn-primary" id="period-submit-btn">Hinzufügen</button>
         <button type="button" class="btn-ghost" id="period-form-cancel">Abbrechen</button>
       </form>
@@ -2023,6 +2075,28 @@
   }
 
   // ---------- Calendar ----------
+  function isoWeekNumber(date){
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = (d.getUTCDay() + 6) % 7; // Montag = 0
+    d.setUTCDate(d.getUTCDate() - dayNum + 3); // auf den Donnerstag dieser Woche setzen
+    const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+    const diff = d - firstThursday;
+    return 1 + Math.round(diff / (7*24*60*60*1000));
+  }
+
+  // Montag einer ISO-Kalenderwoche (Woche 1 = Woche mit dem ersten Donnerstag des Jahres).
+  function isoWeekToMonday(week, year){
+    const jan4 = new Date(year, 0, 4);
+    const jan4DayNum = (jan4.getDay() + 6) % 7; // Montag = 0
+    const week1Monday = new Date(jan4.getFullYear(), jan4.getMonth(), jan4.getDate() - jan4DayNum);
+    return new Date(week1Monday.getFullYear(), week1Monday.getMonth(), week1Monday.getDate() + (week-1)*7);
+  }
+
+  function isoWeekToSunday(week, year){
+    const monday = isoWeekToMonday(week, year);
+    return new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+  }
+
   async function renderCalendar(periods){
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
@@ -2036,6 +2110,10 @@
 
     const grid = document.getElementById("cal-grid");
     grid.innerHTML = "";
+
+    const weekLabelSpacer = document.createElement("div");
+    weekLabelSpacer.className = "cal-week-num cal-week-num-spacer";
+    grid.appendChild(weekLabelSpacer);
     WEEKDAYS.forEach(w => {
       const el = document.createElement("div");
       el.className = "cal-weekday";
@@ -2044,35 +2122,50 @@
     });
 
     const firstDay = new Date(year, month, 1);
-    const offset = (firstDay.getDay() + 6) % 7; // Monday = 0
+    const offset = (firstDay.getDay() + 6) % 7; // Montag = 0
     const daysInMonth = new Date(year, month+1, 0).getDate();
+    const totalCells = offset + daysInMonth;
+    const rowCount = Math.ceil(totalCells / 7);
+    const gridStartDate = new Date(year, month, 1 - offset); // Montag der ersten Zeile
 
-    for(let i=0; i<offset; i++){
-      const blank = document.createElement("div");
-      blank.className = "cal-day blank";
-      grid.appendChild(blank);
-    }
+    let dayCounter = 1;
+    for(let row=0; row<rowCount; row++){
+      const rowMonday = new Date(gridStartDate.getFullYear(), gridStartDate.getMonth(), gridStartDate.getDate() + row*7);
+      const weekNumEl = document.createElement("div");
+      weekNumEl.className = "cal-week-num";
+      weekNumEl.textContent = isoWeekNumber(rowMonday);
+      weekNumEl.title = `Kalenderwoche ${isoWeekNumber(rowMonday)}`;
+      grid.appendChild(weekNumEl);
 
-    for(let day=1; day<=daysInMonth; day++){
-      const dateISO = isoDate(new Date(year, month, day));
-      const dateObj = new Date(year, month, day);
-      const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-      const type = findDayType(dateISO, periods);
-      const cell = document.createElement("div");
-      cell.className = "cal-day";
-      if(dateISO === todayISO) cell.classList.add("today");
-      if(dateISO < todayISO) cell.classList.add("past");
-      if(isWeekend) cell.classList.add("weekend");
-      const noteDot = noteDates.has(dateISO) ? `<span class="note-dot" title="Notiz/Termin an diesem Tag"></span>` : "";
-      if(type){
-        cell.classList.add("has-period");
-        cell.style.background = TYPES[type].color;
-        cell.style.borderColor = TYPES[type].color;
-        cell.innerHTML = `<span class="num">${day}</span><span class="type-label">${TYPES[type].label}</span>${noteDot}`;
-      } else {
-        cell.innerHTML = `<span class="num">${day}</span>${noteDot}`;
+      for(let col=0; col<7; col++){
+        const cellIndex = row*7 + col;
+        if(cellIndex < offset || dayCounter > daysInMonth){
+          const blank = document.createElement("div");
+          blank.className = "cal-day blank";
+          grid.appendChild(blank);
+          continue;
+        }
+        const day = dayCounter++;
+        const dateISO = isoDate(new Date(year, month, day));
+        const dateObj = new Date(year, month, day);
+        const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+        const type = findDayType(dateISO, periods);
+        const cell = document.createElement("div");
+        cell.className = "cal-day";
+        if(dateISO === todayISO) cell.classList.add("today");
+        if(dateISO < todayISO) cell.classList.add("past");
+        if(isWeekend) cell.classList.add("weekend");
+        const noteDot = noteDates.has(dateISO) ? `<span class="note-dot" title="Notiz/Termin an diesem Tag"></span>` : "";
+        if(type){
+          cell.classList.add("has-period");
+          cell.style.background = TYPES[type].color;
+          cell.style.borderColor = TYPES[type].color;
+          cell.innerHTML = `<span class="num">${day}</span><span class="type-label">${TYPES[type].label}</span>${noteDot}`;
+        } else {
+          cell.innerHTML = `<span class="num">${day}</span>${noteDot}`;
+        }
+        grid.appendChild(cell);
       }
-      grid.appendChild(cell);
     }
   }
 
@@ -2125,6 +2218,7 @@
     const p = await get("periods", id);
     if(!p) return;
     editingPeriodId = id;
+    setPeriodInputMode("date");
     document.getElementById("period-type").value = p.type;
     document.getElementById("period-start").value = p.start;
     document.getElementById("period-end").value = p.end;
@@ -2132,6 +2226,7 @@
     document.getElementById("period-submit-btn").textContent = "Änderungen speichern";
     document.getElementById("period-form-cancel").style.display = "inline-block";
     document.getElementById("period-form").scrollIntoView({behavior:"smooth", block:"center"});
+    updatePeriodWeekPreview();
   }
 
   document.getElementById("period-form-cancel").addEventListener("click", () => {
@@ -2143,6 +2238,8 @@
     document.getElementById("period-form").reset();
     document.getElementById("period-submit-btn").textContent = "Hinzufügen";
     document.getElementById("period-form-cancel").style.display = "none";
+    setPeriodInputMode("date");
+    updatePeriodWeekPreview();
   }
 
   async function deletePeriod(id){
@@ -2153,11 +2250,102 @@
     await renderDetail();
   }
 
+  // ---------- Zeitabschnitt: Eingabe per Datum oder Kalenderwoche ----------
+  let periodInputMode = "date";
+
+  function setPeriodInputMode(mode){
+    periodInputMode = mode;
+    const isWeek = mode === "week";
+    document.getElementById("period-mode-date").classList.toggle("active", !isWeek);
+    document.getElementById("period-mode-date").setAttribute("aria-pressed", String(!isWeek));
+    document.getElementById("period-mode-week").classList.toggle("active", isWeek);
+    document.getElementById("period-mode-week").setAttribute("aria-pressed", String(isWeek));
+    document.querySelectorAll(".period-input-date").forEach(el => el.hidden = isWeek);
+    document.querySelectorAll(".period-input-week").forEach(el => el.hidden = !isWeek);
+    document.getElementById("period-start").required = !isWeek;
+    document.getElementById("period-end").required = !isWeek;
+    document.getElementById("period-week-start").required = isWeek;
+    document.getElementById("period-week-end").required = isWeek;
+  }
+
+  document.getElementById("period-mode-date").addEventListener("click", () => {
+    setPeriodInputMode("date");
+    updatePeriodWeekPreview();
+  });
+  document.getElementById("period-mode-week").addEventListener("click", () => {
+    setPeriodInputMode("week");
+    const y = viewDate.getFullYear();
+    if(!document.getElementById("period-week-start-year").value) document.getElementById("period-week-start-year").value = y;
+    if(!document.getElementById("period-week-end-year").value) document.getElementById("period-week-end-year").value = y;
+    updatePeriodWeekPreview();
+  });
+
+  function computePeriodDatesFromWeekInputs(){
+    const ws = parseInt(document.getElementById("period-week-start").value);
+    const wsy = parseInt(document.getElementById("period-week-start-year").value);
+    const we = parseInt(document.getElementById("period-week-end").value);
+    const wey = parseInt(document.getElementById("period-week-end-year").value);
+    if(!ws || !wsy || !we || !wey) return null;
+    if(ws < 1 || ws > 53 || we < 1 || we > 53) return null;
+    const start = isoDate(isoWeekToMonday(ws, wsy));
+    const end = isoDate(isoWeekToSunday(we, wey));
+    return {start, end};
+  }
+
+  function updatePeriodWeekPreview(){
+    const el = document.getElementById("period-week-preview");
+    if(periodInputMode === "week"){
+      const dates = computePeriodDatesFromWeekInputs();
+      if(dates){
+        if(dates.start > dates.end){
+          el.textContent = "Die End-Kalenderwoche liegt vor der Start-Kalenderwoche.";
+          el.classList.add("error");
+        } else {
+          el.textContent = `→ ${formatDE(dates.start)} (Mo) bis ${formatDE(dates.end)} (So)`;
+          el.classList.remove("error");
+        }
+      } else {
+        el.textContent = "";
+        el.classList.remove("error");
+      }
+    } else {
+      const start = document.getElementById("period-start").value;
+      const end = document.getElementById("period-end").value;
+      if(start && end){
+        const kwStart = isoWeekNumber(new Date(start + "T00:00:00"));
+        const kwEnd = isoWeekNumber(new Date(end + "T00:00:00"));
+        el.textContent = kwStart === kwEnd ? `→ KW ${kwStart}` : `→ KW ${kwStart} bis KW ${kwEnd}`;
+        el.classList.remove("error");
+      } else {
+        el.textContent = "";
+        el.classList.remove("error");
+      }
+    }
+  }
+
+  ["period-week-start","period-week-start-year","period-week-end","period-week-end-year"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updatePeriodWeekPreview);
+  });
+  ["period-start","period-end"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updatePeriodWeekPreview);
+  });
+
   document.getElementById("period-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const type = document.getElementById("period-type").value;
-    const start = document.getElementById("period-start").value;
-    const end = document.getElementById("period-end").value;
+    let start, end;
+    if(periodInputMode === "week"){
+      const dates = computePeriodDatesFromWeekInputs();
+      if(!dates){
+        alert("Bitte Kalenderwoche und Jahr für Anfang und Ende ausfüllen.");
+        return;
+      }
+      start = dates.start;
+      end = dates.end;
+    } else {
+      start = document.getElementById("period-start").value;
+      end = document.getElementById("period-end").value;
+    }
     const note = document.getElementById("period-note").value.trim();
     if(!start || !end){ return; }
     if(start > end){
