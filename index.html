@@ -1176,14 +1176,7 @@
           </div>
           <div class="meta-field">
             <label for="detail-practicum-select">Praktikum (Anlass)</label>
-            <select id="detail-practicum-select">
-              <option value="">–</option>
-              <option value="1. Praktikum">1. Praktikum</option>
-              <option value="2. Praktikum">2. Praktikum</option>
-              <option value="3. Praktikum">3. Praktikum</option>
-              <option value="4. Praktikum">4. Praktikum</option>
-              <option value="Ansatz-/Abschlusspraktikum">Ansatz-/Abschlusspraktikum</option>
-            </select>
+            <select id="detail-practicum-select"></select>
           </div>
           <div class="meta-field">
             <label for="detail-profile-input">Profil-Link</label>
@@ -2196,6 +2189,14 @@
     await renderDetail();
   }
 
+  // Auswahl des Praktikums passend zum Ausbildungsjahr: 1. Jahr = 1./2., 2. Jahr = 3./4., 3. Jahr = Ansatz-/Abschlusspraktikum
+  function fillPracticumSelect(year, current){
+    const sel = document.getElementById("detail-practicum-select");
+    const options = PDF_ANLASS_OPTIONS[year] || [];
+    sel.innerHTML = `<option value="">–</option>` + options.map(o => `<option value="${o}">${o}</option>`).join("");
+    sel.value = options.includes(current) ? current : "";
+  }
+
   async function renderDetail(){
     const azubi = await get("azubis", currentAzubiId);
     if(!azubi) return;
@@ -2224,7 +2225,7 @@
 
     document.getElementById("detail-trainer-input").value = azubi.trainerName || "";
     document.getElementById("detail-service-input").value = azubi.serviceArea || "";
-    document.getElementById("detail-practicum-select").value = azubi.practicumLabel || "";
+    fillPracticumSelect(azubi.trainingYear || 1, azubi.practicumLabel);
     document.getElementById("detail-profile-input").value = azubi.profileUrl || "";
     const profileOpenLink = document.getElementById("detail-profile-open");
     if(azubi.profileUrl){
@@ -2253,6 +2254,11 @@
     const azubi = await get("azubis", currentAzubiId);
     if(!azubi) return;
     azubi.trainingYear = parseInt(e.target.value, 10) || 1;
+    // Praktikum passt nur zu einem Jahr: ungültigen Wert verwerfen, bei nur einer Möglichkeit direkt setzen
+    const validOptions = PDF_ANLASS_OPTIONS[azubi.trainingYear] || [];
+    if(!validOptions.includes(azubi.practicumLabel)){
+      azubi.practicumLabel = validOptions.length === 1 ? validOptions[0] : "";
+    }
     await put("azubis", azubi);
     feedbackViewYear = azubi.trainingYear;
     await renderSidebar();
