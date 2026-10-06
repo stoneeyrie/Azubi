@@ -2394,10 +2394,29 @@
     const todayType = findDayType(todayISO, periods);
 
     if(todayType && NON_WORKING_TYPES.includes(todayType)){
-      const covering = periods.find(p => p.type === todayType && p.start <= todayISO && todayISO <= p.end);
-      const returnDate = nextWeekdayAfter(covering.end);
+      // Aufeinanderfolgende Abwesenheiten (z. B. Seminar, danach Berufsschule) zu einer Kette zusammenfassen.
+      // "Zurück" ist erst der erste Werktag nach der gesamten Kette.
+      const chain = [];
+      let day = todayISO, lastType = null;
+      for(let i = 0; i < 800; i++){
+        const t = findDayType(day, periods);
+        if(!t || !NON_WORKING_TYPES.includes(t)) break;
+        if(t !== lastType){ chain.push({type: t, end: day}); lastType = t; }
+        else chain[chain.length - 1].end = day;
+        day = nextWeekdayAfter(day);
+      }
+      const returnDate = day;
+      const returnType = findDayType(returnDate, periods);
+      const first = chain[0];
       banner.style.setProperty("--banner-color", TYPES[todayType].color);
-      banner.innerHTML = `<strong>Aktuell abwesend: ${escapeHTML(TYPES[todayType].label)}</strong> bis ${formatDE(covering.end)} · zurück am ${formatDE(returnDate)}`;
+      let html = `<strong>Aktuell abwesend: ${escapeHTML(TYPES[first.type].label)}</strong> bis ${formatDE(first.end)}`;
+      for(const seg of chain.slice(1)){
+        html += ` · danach ${escapeHTML(TYPES[seg.type].label)} bis ${formatDE(seg.end)}`;
+      }
+      html += returnType === "praktikum"
+        ? ` · zurück am ${formatDE(returnDate)}`
+        : ` · danach keine weitere Eintragung`;
+      banner.innerHTML = html;
       banner.style.display = "block";
       return;
     }
