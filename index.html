@@ -800,6 +800,7 @@
   /* Period form + list */
   #period-form{display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid var(--line);}
   #period-form .field{display:flex; flex-direction:column; gap:4px;}
+  #period-form .field[hidden]{display:none;}
   #period-form label{font-size:0.75rem; color:var(--text-soft);}
   #period-form input, #period-form select{
     border:1px solid var(--line);
@@ -2797,7 +2798,17 @@
     } else {
       await add("periods", {azubiId: currentAzubiId, type, start, end, note});
     }
+    // Art und Eingabeart (Datum/KW) bleiben für die schnelle Folgeeingabe erhalten
+    const keepMode = periodInputMode;
     resetPeriodForm();
+    document.getElementById("period-type").value = type;
+    setPeriodInputMode(keepMode);
+    if(keepMode === "week"){
+      const y = viewDate.getFullYear();
+      document.getElementById("period-week-start-year").value = y;
+      document.getElementById("period-week-end-year").value = y;
+    }
+    updatePeriodWeekPreview();
     await renderSidebar();
     await renderDetail();
   });
