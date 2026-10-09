@@ -508,6 +508,8 @@
     gap:8px;
   }
   #archive-toggle-azubi-btn{white-space:nowrap;}
+  #copy-overview-btn{display:inline-flex; align-items:center; gap:7px; white-space:nowrap;}
+  #copy-overview-btn svg{width:15px; height:15px; flex-shrink:0;}
   #delete-azubi-btn{
     background:none;
     border:1px solid var(--line);
@@ -1188,6 +1190,7 @@
         </div>
       </div>
       <div id="detail-header-actions">
+        <button id="copy-overview-btn" type="button" class="btn-ghost" title="Übersicht mit Formatierung in die Zwischenablage kopieren"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/></svg><span>Übersicht kopieren</span></button>
         <button id="archive-toggle-azubi-btn" type="button" class="btn-ghost">Praktikum abschließen &amp; archivieren</button>
         <button id="delete-azubi-btn" type="button" title="Azubi löschen" aria-label="Azubi löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
       </div>
@@ -2164,6 +2167,193 @@
     document.getElementById("detail").style.display = "none";
     document.getElementById("empty-state").style.display = "block";
     await renderSidebar();
+  });
+
+  // ---------- Übersicht als formatierter Text in die Zwischenablage ----------
+  // Aus den Daten wird zuerst ein neutrales Blockmodell gebaut, daraus entstehen HTML (mit Formatierung für Word,
+  // Outlook, Teams …) und reiner Text (für Editoren ohne Formatierung) – so sind beide Varianten inhaltlich identisch.
+  function ovCell(c){ return (c && typeof c === "object") ? c : {text: c == null ? "" : String(c)}; }
+  function ovAttr(str){ return escapeHTML(str).replace(/"/g, "&quot;"); }
+  function ovSafeHref(url){ return /^https?:\/\//i.test(url || "") ? url : ""; }
+  function ovHtmlText(str){ return escapeHTML(str).replace(/\n/g, "<br>"); }
+  function ovKwRange(startISO, endISO){
+    const a = isoWeekNumber(new Date(startISO + "T00:00:00"));
+    const b = isoWeekNumber(new Date(endISO + "T00:00:00"));
+    return a === b ? `KW ${a}` : `KW ${a}–${b}`;
+  }
+  function ovDays(n){ return `${n} ${n === 1 ? "Werktag" : "Werktage"}`; }
+
+  async function buildAzubiOverview(azubiId){
+    const azubi = await get("azubis", azubiId);
+    if(!azubi) throw new Error("Azubi nicht gefunden.");
+    const periods = await getAllByIndex("periods", "azubiId", azubiId);
+    const B = []; // Blockmodell
+    B.push({t: "title", text: `Azubi-Übersicht: ${azubi.name}`});
+    B.push({t: "meta", text: `Stand: ${formatDE(todayISO)}`});
+
+    // --- Stammdaten
+    const status = azubi.archived
+      ? (azubi.archivedAt ? `Archiviert am ${formatDE(azubi.archivedAt)}` : "Archiviert")
+      : computeStatus(periods).text;
+    const kv = [["Ausbildungsjahr", `${azubi.trainingYear || 1}. Ausbildungsjahr`]];
+    if(azubi.practicumLabel) kv.push(["Praktikum", azubi.practicumLabel]);
+    if(azubi.role) kv.push(["Gruppe", azubi.role]);
+    if(azubi.trainerName) kv.push(["Ausbilder/in", azubi.trainerName]);
+    if(azubi.serviceArea) kv.push(["Servicebereich", azubi.serviceArea]);
+    if(azubi.profileUrl) kv.push(["Profil-Link", {text: azubi.profileUrl, href: ovSafeHref(azubi.profileUrl)}]);
+    kv.push(["Aktueller Status", status]);
+    B.push({t: "h", text: "Stammdaten"});
+    B.push({t: "kv", rows: kv});
+
+    // --- Anwesenheit
+    const {list} = buildDayAssignments(periods);
+    B.push({t: "h", text: "Anwesenheit bei uns (Praktikum)"});
+    const presentDays = list.filter(i => i.type === "praktikum").map(i => i.date);
+    if(periods.length === 0 || presentDays.length === 0){
+      B.push({t: "empty", text: periods.length === 0 ? "Noch keine Zeitabschnitte erfasst." : "Keine reinen Praktikumstage erfasst."});
+    } else {
+      const ranges = [];
+      for(const d of presentDays){
+        const last = ranges[ranges.length - 1];
+        if(last && nextWeekdayAfter(last.end) === d){ last.end = d; last.days++; }
+        else ranges.push({start: d, end: d, days: 1});
+      }
+      B.push({t: "table", head: ["Kalenderwoche", "Zeitraum", "Werktage"],
+        rows: ranges.map(r => [ovKwRange(r.start, r.end), `${formatDE(r.start)} – ${formatDE(r.end)}`, String(r.days)])});
+    }
+
+    B.push({t: "h", text: "Abwesenheiten"});
+    const absences = periods.filter(p => NON_WORKING_TYPES.includes(p.type)).sort((a, b) => a.start.localeCompare(b.start));
+    if(absences.length === 0){
+      B.push({t: "empty", text: "Keine Abwesenheiten erfasst."});
+    } else {
+      B.push({t: "table", head: ["Art", "Kalenderwoche", "Zeitraum", "Werktage", "Notiz"],
+        rows: absences.map(a => [TYPES[a.type].label, ovKwRange(a.start, a.end), `${formatDE(a.start)} – ${formatDE(a.end)}`,
+          String(countWeekdays(a.start, a.end)), a.note || ""])});
+    }
+
+    return {html: overviewToHtml(B), text: overviewToText(B)};
+  }
+
+  function overviewToHtml(blocks){
+    const FONT = "font-family:Calibri,Arial,sans-serif;";
+    const cellBase = "border:1px solid #BFBFBF;padding:3px 8px;vertical-align:top;text-align:left;";
+    const cellHtml = c => {
+      c = ovCell(c);
+      let h = ovHtmlText(c.text);
+      if(c.href) h = `<a href="${ovAttr(c.href)}">${h}</a>`;
+      return h;
+    };
+    let out = `<div style="${FONT}font-size:11pt;">`;
+    for(const b of blocks){
+      switch(b.t){
+        case "title": out += `<h1 style="${FONT}font-size:18pt;margin:0 0 2px;">${ovHtmlText(b.text)}</h1>`; break;
+        case "meta": out += `<p style="${FONT}margin:0 0 6px;color:#666666;font-size:10pt;">${ovHtmlText(b.text)}</p>`; break;
+        case "h": out += `<h2 style="${FONT}font-size:14pt;margin:20px 0 6px;padding-bottom:2px;border-bottom:1px solid #999999;">${ovHtmlText(b.text)}</h2>`; break;
+        case "sub": out += `<p style="${FONT}margin:12px 0 4px;"><b>${ovHtmlText(b.text)}</b></p>`; break;
+        case "p": out += `<p style="${FONT}margin:2px 0 8px;">${ovHtmlText(b.text)}</p>`; break;
+        case "empty": out += `<p style="${FONT}margin:2px 0 8px;color:#666666;"><i>${ovHtmlText(b.text)}</i></p>`; break;
+        case "kv":
+          out += `<table style="border-collapse:collapse;margin:2px 0 8px;" cellpadding="0" cellspacing="0">`;
+          for(const [k, v] of b.rows){
+            out += `<tr><td style="padding:2px 16px 2px 0;vertical-align:top;white-space:nowrap;"><b>${ovHtmlText(k)}</b></td><td style="padding:2px 0;vertical-align:top;">${cellHtml(v)}</td></tr>`;
+          }
+          out += `</table>`;
+          break;
+        case "table":
+          out += `<table style="border-collapse:collapse;margin:4px 0 10px;" border="1" cellpadding="4" cellspacing="0"><thead><tr>`;
+          for(const h of b.head) out += `<th style="${cellBase}background-color:#E7E6E6;font-weight:bold;">${ovHtmlText(h)}</th>`;
+          out += `</tr></thead><tbody>`;
+          for(const row of b.rows){
+            out += `<tr>` + row.map(c => `<td style="${cellBase}">${cellHtml(c)}</td>`).join("") + `</tr>`;
+          }
+          out += `</tbody></table>`;
+          break;
+      }
+    }
+    return out + `</div>`;
+  }
+
+  function overviewToText(blocks){
+    const cellText = c => ovCell(c).text.replace(/\s*\n\s*/g, " ");
+    const lines = [];
+    for(const b of blocks){
+      switch(b.t){
+        case "title": lines.push(b.text); break;
+        case "meta": lines.push(b.text, ""); break;
+        case "h": lines.push("", b.text.toUpperCase(), "-".repeat(Math.min(b.text.length, 60))); break;
+        case "sub": lines.push("", b.text); break;
+        case "p": lines.push(b.text); break;
+        case "empty": lines.push(`(${b.text})`); break;
+        case "kv":
+          for(const [k, v] of b.rows){
+            const val = ovCell(v).text;
+            lines.push(val.includes("\n") ? `${k}:\n  ${val.replace(/\n/g, "\n  ")}` : `${k}: ${val}`);
+          }
+          break;
+        case "table":
+          lines.push(b.head.join(" | "));
+          for(const row of b.rows) lines.push(row.map(cellText).join(" | ").replace(/\s*\|\s*$/, ""));
+          break;
+      }
+    }
+    return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+  }
+
+  // Schreibt HTML und Klartext gemeinsam in die Zwischenablage. Die Daten werden als Promise übergeben,
+  // damit die Browser-Erlaubnis durch den Klick auch bei längerer Aufbereitung erhalten bleibt.
+  async function copyRichToClipboard(dataPromise){
+    try{
+      if(navigator.clipboard && window.ClipboardItem){
+        await navigator.clipboard.write([new ClipboardItem({
+          "text/html": dataPromise.then(d => new Blob([d.html], {type: "text/html"})),
+          "text/plain": dataPromise.then(d => new Blob([d.text], {type: "text/plain"}))
+        })]);
+        return true;
+      }
+    } catch(err){
+      console.warn("Clipboard-API nicht verfügbar, nutze Ersatzweg:", err);
+    }
+    // Ersatzweg: formatierten Inhalt kurz unsichtbar einblenden, markieren und kopieren
+    const data = await dataPromise;
+    const holder = document.createElement("div");
+    holder.contentEditable = "true";
+    holder.style.cssText = "position:fixed;left:-9999px;top:0;width:800px;background:#fff;color:#000;";
+    holder.innerHTML = data.html;
+    document.body.appendChild(holder);
+    const range = document.createRange();
+    range.selectNodeContents(holder);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    let ok = false;
+    try{ ok = document.execCommand("copy"); } catch(err){ ok = false; }
+    sel.removeAllRanges();
+    holder.remove();
+    return ok;
+  }
+
+  document.getElementById("copy-overview-btn").addEventListener("click", async () => {
+    if(currentAzubiId === null) return;
+    const btn = document.getElementById("copy-overview-btn");
+    const label = btn.querySelector("span");
+    const icon = btn.querySelector("svg");
+    const oldLabel = label.textContent;
+    const oldIcon = icon.outerHTML;
+    btn.disabled = true;
+    let ok = false;
+    try{
+      ok = await copyRichToClipboard(buildAzubiOverview(currentAzubiId));
+    } catch(err){
+      console.error(err);
+    }
+    label.textContent = ok ? "Kopiert" : "Kopieren fehlgeschlagen";
+    if(ok) icon.outerHTML = ICON_CHECK;
+    setTimeout(() => {
+      btn.querySelector("svg").outerHTML = oldIcon;
+      btn.querySelector("span").textContent = oldLabel;
+      btn.disabled = false;
+    }, 2200);
   });
 
   // ---------- Select Azubi ----------
